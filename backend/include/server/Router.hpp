@@ -14,12 +14,6 @@ public:
     static void registerRoutes(httplib::Server& svr);
 
 private:
-    // --- Middleware ---
-    static void setCORSHeaders(httplib::Response& res);
-    static bool parseBody(const httplib::Request& req,
-                          httplib::Response& res,
-                          void* jsonOut);
-
     // --- Endpoint handlers ---
     static void handleLoadImage(const httplib::Request& req, httplib::Response& res);
     static void handleAddNoise(const httplib::Request& req, httplib::Response& res);

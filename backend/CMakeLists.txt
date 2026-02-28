@@ -74,6 +74,11 @@ target_link_libraries(cv_backend
         nlohmann_json::nlohmann_json
 )
 
+target_compile_definitions(cv_backend
+    PRIVATE
+        CPPHTTPLIB_OPENSSL_SUPPORT
+)
+
 target_compile_options(cv_backend
     PRIVATE
         $<$<CONFIG:Release>:-O3 -DNDEBUG>
