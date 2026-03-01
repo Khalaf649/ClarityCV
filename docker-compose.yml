@@ -1,10 +1,5 @@
-version: "3.9"
-
 services:
 
-  # ---------------------------------------------------------------------------
-  # C++ OpenCV Backend
-  # ---------------------------------------------------------------------------
   backend:
     build:
       context: ./backend
@@ -27,14 +22,13 @@ services:
     networks:
       - cv_network
 
-  # ---------------------------------------------------------------------------
-  # React Frontend
-  # ---------------------------------------------------------------------------
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       target: runtime
+      args:
+        BACKEND_URL: "http://backend:8080"
     container_name: cv_frontend
     restart: unless-stopped
     ports:

@@ -1,7 +1,6 @@
 #pragma once
 #include <opencv2/opencv.hpp>
 #include <string>
-#include <vector>
 
 namespace utils {
 
@@ -10,6 +9,5 @@ std::string encodeImageToBase64(const cv::Mat& image, const std::string& ext = "
 
 cv::Mat toGrayscale(const cv::Mat& image);
 cv::Mat toRGB(const cv::Mat& image);
-bool validateImage(const cv::Mat& image);
 
 } // namespace utils

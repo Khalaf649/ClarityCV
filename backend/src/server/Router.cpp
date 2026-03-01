@@ -4,6 +4,7 @@
 #include "processing/FilterProcessor.hpp"
 #include "processing/EdgeDetector.hpp"
 #include "processing/HistogramProcessor.hpp"
+#include "processing/ThresholdProcessor.hpp"
 #include "processing/FrequencyProcessor.hpp"
 #include "processing/HybridProcessor.hpp"
 
@@ -75,6 +76,7 @@ void Router::registerRoutes(httplib::Server& svr) {
     svr.Post("/api/histogram",       handleHistogram);
     svr.Post("/api/equalize",        handleEqualize);
     svr.Post("/api/normalize",       handleNormalize);
+    svr.Post("/api/threshold",       handleThreshold);
     svr.Post("/api/frequency",       handleFrequency);
     svr.Post("/api/hybrid",          handleHybrid);
 }
@@ -176,8 +178,10 @@ void Router::handleFilter(const httplib::Request& req, httplib::Response& res) {
         else if (typeStr == "median")  params.type = processing::FilterType::MEDIAN;
         else                           params.type = processing::FilterType::GAUSSIAN;
 
-        params.kernelSize = body.value("kernel_size", 3);
-        params.sigmaX     = body.value("sigma",       0.0);
+        int ks = body.value("kernel_size", 3);
+        if (ks % 2 == 0) ks += 1;  // OpenCV requires odd kernel size
+        params.kernelSize = ks;
+        params.sigmaX     = body.value("sigma", 0.0);
 
         cv::Mat result = processing::FilterProcessor::applyFilter(img, params);
 
@@ -309,36 +313,38 @@ void Router::handleNormalize(const httplib::Request& req, httplib::Response& res
 //         "threshold": 127, "block_size": 11, "c": 2 }
 // ---------------------------------------------------------------------------
 
-// void Router::handleThreshold(const httplib::Request& req, httplib::Response& res) {
-//     json body;
-//     if (!parseBody(req, res, body)) return;
-//     try {
-//         cv::Mat img = requireImage(body);
+void Router::handleThreshold(const httplib::Request& req, httplib::Response& res) {
+    json body;
+    if (!parseBody(req, res, body)) return;
+    try {
+        cv::Mat img = requireImage(body);
 
-//         processing::ThresholdParams params;
-//         std::string typeStr = body.value("type", "global_otsu");
-//         if      (typeStr == "global_binary")   params.type = processing::ThresholdType::GLOBAL_BINARY;
-//         else if (typeStr == "local_mean")      params.type = processing::ThresholdType::LOCAL_MEAN;
-//         else if (typeStr == "local_gaussian")  params.type = processing::ThresholdType::LOCAL_GAUSSIAN;
-//         else                                   params.type = processing::ThresholdType::GLOBAL_OTSU;
+        processing::ThresholdParams params;
+        std::string typeStr = body.value("type", "global_otsu");
+        if      (typeStr == "global_binary")   params.type = processing::ThresholdType::GLOBAL_BINARY;
+        else if (typeStr == "local_mean")      params.type = processing::ThresholdType::LOCAL_MEAN;
+        else if (typeStr == "local_gaussian")  params.type = processing::ThresholdType::LOCAL_GAUSSIAN;
+        else                                   params.type = processing::ThresholdType::GLOBAL_OTSU;
 
-//         params.threshold = body.value("threshold",  127.0);
-//         params.blockSize = body.value("block_size", 11);
-//         params.C         = body.value("c",          2.0);
+        params.threshold = body.value("threshold",  127.0);
+        int bs = body.value("block_size", 11);
+        if (bs % 2 == 0) bs += 1;  // OpenCV adaptive threshold requires odd block size
+        params.blockSize = bs;
+        params.C         = body.value("c",          2.0);
 
-//         processing::ThresholdResult result = processing::ThresholdProcessor::apply(img, params);
+        processing::ThresholdResult result = processing::ThresholdProcessor::apply(img, params);
 
-//         setCORSHeaders(res);
-//         json response = {
-//             {"success",            true},
-//             {"image",              imageToB64(result.binary)},
-//             {"applied_threshold",  result.appliedThreshold}
-//         };
-//         res.set_content(response.dump(), "application/json");
-//     } catch (const std::exception& e) {
-//         sendError(res, 422, e.what());
-//     }
-// }
+        setCORSHeaders(res);
+        json response = {
+            {"success",            true},
+            {"image",              imageToB64(result.binary)},
+            {"applied_threshold",  result.appliedThreshold}
+        };
+        res.set_content(response.dump(), "application/json");
+    } catch (const std::exception& e) {
+        sendError(res, 422, e.what());
+    }
+}
 
 // ---------------------------------------------------------------------------
 // POST /api/frequency

@@ -9,7 +9,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Build type defaults to Release
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
@@ -20,23 +19,11 @@ endif()
 find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs highgui)
 find_package(Threads REQUIRED)
 
-# cpp-httplib (header-only, fetched via FetchContent)
-include(FetchContent)
+# nlohmann/json — installed via apt (nlohmann-json3-dev)
+find_package(nlohmann_json REQUIRED)
 
-FetchContent_Declare(
-    httplib
-    GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
-    GIT_TAG        v0.15.3
-)
-FetchContent_MakeAvailable(httplib)
-
-# nlohmann/json (header-only)
-FetchContent_Declare(
-    nlohmann_json
-    GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG        v3.11.3
-)
-FetchContent_MakeAvailable(nlohmann_json)
+# cpp-httplib — single header downloaded via wget in Dockerfile
+# lives at /usr/local/include/httplib.h — no find_package needed
 
 # ---------------------------------------------------------------------------
 # Source files
@@ -48,6 +35,7 @@ set(SOURCES
     src/processing/FilterProcessor.cpp
     src/processing/EdgeDetector.cpp
     src/processing/HistogramProcessor.cpp
+    src/processing/ThresholdProcessor.cpp
     src/processing/FrequencyProcessor.cpp
     src/processing/HybridProcessor.cpp
     src/server/Server.cpp
@@ -63,14 +51,16 @@ target_include_directories(cv_backend
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${OpenCV_INCLUDE_DIRS}
+        /usr/local/include
 )
 
 target_link_libraries(cv_backend
     PRIVATE
         ${OpenCV_LIBS}
         Threads::Threads
-        httplib::httplib
         nlohmann_json::nlohmann_json
+        ssl
+        crypto
 )
 
 target_compile_definitions(cv_backend

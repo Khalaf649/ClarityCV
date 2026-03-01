@@ -10,17 +10,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     git \
     ca-certificates \
+    wget \
+    curl \
     libopencv-dev \
     libssl-dev \
     zlib1g-dev \
+    nlohmann-json3-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Download cpp-httplib single header (much faster than FetchContent)
+RUN wget -q -O /usr/local/include/httplib.h \
+    https://raw.githubusercontent.com/yhirose/cpp-httplib/v0.15.3/httplib.h
 
 WORKDIR /build
 
-# Copy source code
 COPY . .
 
-# Configure and build in Release mode
 RUN cmake -B build \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/install \
@@ -37,9 +42,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libopencv-dev \
     libssl3 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user for security
 RUN useradd --system --create-home --shell /bin/bash appuser
 
 COPY --from=builder /install/bin/cv_backend /usr/local/bin/cv_backend
@@ -48,7 +53,6 @@ RUN chown appuser:appuser /usr/local/bin/cv_backend
 
 USER appuser
 
-# Environment defaults (overridable via docker run -e or docker-compose)
 ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=8080
 ENV SERVER_THREADS=4

@@ -6,21 +6,17 @@ namespace utils {
 
 cv::Mat decodeImageFromBase64(const std::string& base64Str) {
     std::string data = base64Str;
-    // Strip data URI prefix if present (e.g. "data:image/png;base64,")
     auto commaPos = data.find(',');
-    if (commaPos != std::string::npos) {
+    if (commaPos != std::string::npos)
         data = data.substr(commaPos + 1);
-    }
 
     std::vector<uchar> bytes = base64Decode(data);
-    if (bytes.empty()) {
+    if (bytes.empty())
         throw std::invalid_argument("Failed to decode base64 image data.");
-    }
 
     cv::Mat img = cv::imdecode(bytes, cv::IMREAD_UNCHANGED);
-    if (img.empty()) {
+    if (img.empty())
         throw std::invalid_argument("Failed to decode image from bytes.");
-    }
     return img;
 }
 
@@ -39,21 +35,11 @@ cv::Mat toGrayscale(const cv::Mat& image) {
 
 cv::Mat toRGB(const cv::Mat& image) {
     if (image.channels() == 3) return image.clone();
-    if (image.channels() == 1) {
-        cv::Mat rgb;
-        cv::cvtColor(image, rgb, cv::COLOR_GRAY2BGR);
-        return rgb;
-    }
-    if (image.channels() == 4) {
-        cv::Mat rgb;
-        cv::cvtColor(image, rgb, cv::COLOR_BGRA2BGR);
-        return rgb;
-    }
-    return image.clone();
-}
-
-bool validateImage(const cv::Mat& image) {
-    return !image.empty() && image.data != nullptr;
+    cv::Mat rgb;
+    if      (image.channels() == 1) cv::cvtColor(image, rgb, cv::COLOR_GRAY2BGR);
+    else if (image.channels() == 4) cv::cvtColor(image, rgb, cv::COLOR_BGRA2BGR);
+    else return image.clone();
+    return rgb;
 }
 
 } // namespace utils
