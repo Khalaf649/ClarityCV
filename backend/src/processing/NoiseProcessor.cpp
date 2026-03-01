@@ -1,5 +1,6 @@
 #include "processing/NoiseProcessor.hpp"
 #include <stdexcept>
+#include <opencv2/opencv.hpp>
 
 namespace processing {
 
@@ -53,25 +54,19 @@ cv::Mat NoiseProcessor::addSaltAndPepperNoise(const cv::Mat& input, double saltP
     cv::Mat randMat(input.size(), CV_64F);
     cv::randu(randMat, 0.0, 1.0);
 
-    for (int r = 0; r < result.rows; r++) {
-        for (int c = 0; c < result.cols; c++) {
-            double val = randMat.at<double>(r, c);
-            if (val < saltProb) {
-                if (result.channels() == 1) {
-                    result.at<uchar>(r, c) = 255;
-                } else {
-                    result.at<cv::Vec3b>(r, c) = cv::Vec3b(255, 255, 255);
-                }
-            } else if (val < saltProb + pepperProb) {
-                if (result.channels() == 1) {
-                    result.at<uchar>(r, c) = 0;
-                } else {
-                    result.at<cv::Vec3b>(r, c) = cv::Vec3b(0, 0, 0);
-                }
-            }
-        }
+    cv::Mat saltMask = randMat < saltProb; // CV_8U mask where salt should be applied
+    cv::Mat pepperMask = (randMat >= saltProb) & (randMat < saltProb + pepperProb);
+
+    if (result.channels() == 1) {
+        result.setTo(255, saltMask);
+        result.setTo(0, pepperMask);
+    } else {
+        result.setTo(cv::Scalar(255, 255, 255), saltMask);
+        result.setTo(cv::Scalar(0, 0, 0), pepperMask);
     }
+
     return result;
 }
 
-} // namespace processing
+} 
+    

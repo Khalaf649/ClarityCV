@@ -8,9 +8,19 @@ namespace processing {
 
 cv::Mat FrequencyProcessor::toGray(const cv::Mat& input) {
     if (input.channels() == 1) return input.clone();
-    cv::Mat gray;
-    cv::cvtColor(input, gray, cv::COLOR_BGR2GRAY);
-    return gray;
+    if (input.channels() == 3) {
+        cv::Mat gray(input.size(), CV_8U);
+        for (int y = 0; y < input.rows; ++y) {
+            for (int x = 0; x < input.cols; ++x) {
+                cv::Vec3b v = input.at<cv::Vec3b>(y, x);
+                gray.at<uchar>(y, x) = static_cast<uchar>(
+                    0.299 * v[2] + 0.587 * v[1] + 0.114 * v[0]
+                );
+            }
+        }
+        return gray;
+    }
+    throw std::invalid_argument("toGray: only 1- or 3-channel images are supported");
 }
 
 cv::Mat FrequencyProcessor::buildMask(int rows, int cols, double cutoff,

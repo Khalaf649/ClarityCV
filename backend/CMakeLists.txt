@@ -48,7 +48,6 @@ set(SOURCES
     src/processing/FilterProcessor.cpp
     src/processing/EdgeDetector.cpp
     src/processing/HistogramProcessor.cpp
-    src/processing/ThresholdProcessor.cpp
     src/processing/FrequencyProcessor.cpp
     src/processing/HybridProcessor.cpp
     src/server/Server.cpp
