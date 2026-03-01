@@ -1,0 +1,44 @@
+services:
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: cv_backend
+    restart: unless-stopped
+    environment:
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "8080"
+      SERVER_THREADS: "4"
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - cv_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        BACKEND_URL: "http://backend:8080"
+    container_name: cv_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - cv_network
+
+networks:
+  cv_network:
+    driver: bridge

@@ -1,0 +1,32 @@
+# Build artifacts
+backend/build/
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+install_manifest.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
