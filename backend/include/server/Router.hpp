@@ -20,6 +20,7 @@ private:
     static void handleFilter(const httplib::Request& req, httplib::Response& res);
     static void handleEdgeDetect(const httplib::Request& req, httplib::Response& res);
     static void handleHistogram(const httplib::Request& req, httplib::Response& res);
+    static void handleHistogramCurve(const httplib::Request& req, httplib::Response& res); // NEW
     static void handleEqualize(const httplib::Request& req, httplib::Response& res);
     static void handleNormalize(const httplib::Request& req, httplib::Response& res);
     static void handleThreshold(const httplib::Request& req, httplib::Response& res);

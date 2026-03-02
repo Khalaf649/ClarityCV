@@ -69,17 +69,18 @@ void Router::registerRoutes(httplib::Server& svr) {
         res.status = 204;
     });
 
-    svr.Get("/api/health",           handleHealth);
-    svr.Post("/api/load",            handleLoadImage);
-    svr.Post("/api/noise",           handleAddNoise);
-    svr.Post("/api/filter",          handleFilter);
-    svr.Post("/api/edge",            handleEdgeDetect);
-    svr.Post("/api/histogram",       handleHistogram);
-    svr.Post("/api/equalize",        handleEqualize);
-    svr.Post("/api/normalize",       handleNormalize);
-    svr.Post("/api/threshold",       handleThreshold);
-    svr.Post("/api/frequency",       handleFrequency);
-    svr.Post("/api/hybrid",          handleHybrid);
+    svr.Get("/api/health",              handleHealth);
+    svr.Post("/api/load",               handleLoadImage);
+    svr.Post("/api/noise",              handleAddNoise);
+    svr.Post("/api/filter",             handleFilter);
+    svr.Post("/api/edge",               handleEdgeDetect);
+    svr.Post("/api/histogram",          handleHistogram);
+    svr.Post("/api/histogram_curve",    handleHistogramCurve);   // NEW
+    svr.Post("/api/equalize",           handleEqualize);
+    svr.Post("/api/normalize",          handleNormalize);
+    svr.Post("/api/threshold",          handleThreshold);
+    svr.Post("/api/frequency",          handleFrequency);
+    svr.Post("/api/hybrid",             handleHybrid);
 }
 
 // ---------------------------------------------------------------------------
@@ -113,10 +114,10 @@ void Router::handleLoadImage(const httplib::Request& req, httplib::Response& res
 
         setCORSHeaders(res);
         json response = {
-            {"success", true},
-            {"image",   imageToB64(result)},
-            {"width",   result.cols},
-            {"height",  result.rows},
+            {"success",  true},
+            {"image",    imageToB64(result)},
+            {"width",    result.cols},
+            {"height",   result.rows},
             {"channels", result.channels()}
         };
         res.set_content(response.dump(), "application/json");
@@ -140,9 +141,9 @@ void Router::handleAddNoise(const httplib::Request& req, httplib::Response& res)
 
         processing::NoiseParams params;
         std::string typeStr = body.value("type", "gaussian");
-        if      (typeStr == "uniform")      params.type = processing::NoiseType::UNIFORM;
-        else if (typeStr == "salt_pepper")  params.type = processing::NoiseType::SALT_AND_PEPPER;
-        else                                params.type = processing::NoiseType::GAUSSIAN;
+        if      (typeStr == "uniform")     params.type = processing::NoiseType::UNIFORM;
+        else if (typeStr == "salt_pepper") params.type = processing::NoiseType::SALT_AND_PEPPER;
+        else                               params.type = processing::NoiseType::GAUSSIAN;
 
         params.mean       = body.value("mean",        0.0);
         params.stddev     = body.value("stddev",      25.0);
@@ -181,11 +182,12 @@ void Router::handleFilter(const httplib::Request& req, httplib::Response& res) {
         else                           params.type = processing::FilterType::GAUSSIAN;
 
         int ks = body.value("kernel_size", 3);
-        if (ks % 2 == 0) ks += 1;  // OpenCV requires odd kernel size
+        if (ks % 2 == 0) ks += 1;   // OpenCV requires odd kernel size
         params.kernelSize = ks;
         params.sigmaX     = body.value("sigma", 0.0);
 
-        cv::Mat result = processing::FilterProcessor::applyFilter(img.noisy.empty() ? img.original : img.noisy, params);
+        cv::Mat result = processing::FilterProcessor::applyFilter(
+            img.noisy.empty() ? img.original : img.noisy, params);
 
         setCORSHeaders(res);
         json response = {{"success", true}, {"image", imageToB64(result)}};
@@ -224,9 +226,9 @@ void Router::handleEdgeDetect(const httplib::Request& req, httplib::Response& re
 
         setCORSHeaders(res);
         json response = {
-            {"success",       true},
-            {"image_x",       imageToB64(result.edgeX)},
-            {"image_y",       imageToB64(result.edgeY)},
+            {"success",        true},
+            {"image_x",        imageToB64(result.edgeX)},
+            {"image_y",        imageToB64(result.edgeY)},
             {"image_combined", imageToB64(result.combined)}
         };
         res.set_content(response.dump(), "application/json");
@@ -270,6 +272,47 @@ void Router::handleHistogram(const httplib::Request& req, httplib::Response& res
 }
 
 // ---------------------------------------------------------------------------
+// POST /api/histogram_curve
+// Body: { "image": "<base64>" }
+// Returns: {
+//   "channels": [ { "label", "bins", "cdf", "mean", "stddev" }, ... ],
+//   "plot":       "<base64>",   <- plain histogram (same as /api/histogram)
+//   "plot_curve": "<base64>"    <- histogram bars + Gaussian distribution curve
+// }
+// ---------------------------------------------------------------------------
+
+void Router::handleHistogramCurve(const httplib::Request& req, httplib::Response& res) {
+    json body;
+    if (!parseBody(req, res, body)) return;
+    try {
+        utils::Image img(requireImage(body));
+        processing::HistogramResult result = processing::HistogramProcessor::compute(img.original);
+
+        json channelsJson = json::array();
+        for (const auto& ch : result.channels) {
+            channelsJson.push_back({
+                {"label",  ch.label},
+                {"bins",   ch.bins},
+                {"cdf",    ch.cdf},
+                {"mean",   ch.mean},
+                {"stddev", ch.stddev}
+            });
+        }
+
+        setCORSHeaders(res);
+        json response = {
+            {"success",    true},
+            {"channels",   channelsJson},
+            {"plot",       imageToB64(result.plotImage)},           // plain histogram
+            {"plot_curve", imageToB64(result.plotImageWithCurve)}   // histogram + distribution curve
+        };
+        res.set_content(response.dump(), "application/json");
+    } catch (const std::exception& e) {
+        sendError(res, 422, e.what());
+    }
+}
+
+// ---------------------------------------------------------------------------
 // POST /api/equalize
 // Body: { "image": "<base64>" }
 // ---------------------------------------------------------------------------
@@ -278,8 +321,8 @@ void Router::handleEqualize(const httplib::Request& req, httplib::Response& res)
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        utils::Image img    = utils::Image(requireImage(body));
-        cv::Mat result = processing::HistogramProcessor::equalize(img.original);
+        utils::Image img = utils::Image(requireImage(body));
+        cv::Mat result   = processing::HistogramProcessor::equalize(img.original);
 
         setCORSHeaders(res);
         json response = {{"success", true}, {"image", imageToB64(result)}};
@@ -298,8 +341,8 @@ void Router::handleNormalize(const httplib::Request& req, httplib::Response& res
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        utils::Image img    = utils::Image(requireImage(body));
-        cv::Mat result = processing::HistogramProcessor::normalize(img.original);
+        utils::Image img = utils::Image(requireImage(body));
+        cv::Mat result   = processing::HistogramProcessor::normalize(img.original);
 
         setCORSHeaders(res);
         json response = {{"success", true}, {"image", imageToB64(result)}};
@@ -323,24 +366,24 @@ void Router::handleThreshold(const httplib::Request& req, httplib::Response& res
 
         processing::ThresholdParams params;
         std::string typeStr = body.value("type", "global_otsu");
-        if      (typeStr == "global_binary")   params.type = processing::ThresholdType::GLOBAL_BINARY;
-        else if (typeStr == "local_mean")      params.type = processing::ThresholdType::LOCAL_MEAN;
-        else if (typeStr == "local_gaussian")  params.type = processing::ThresholdType::LOCAL_GAUSSIAN;
-        else                                   params.type = processing::ThresholdType::GLOBAL_OTSU;
+        if      (typeStr == "global_binary")  params.type = processing::ThresholdType::GLOBAL_BINARY;
+        else if (typeStr == "local_mean")     params.type = processing::ThresholdType::LOCAL_MEAN;
+        else if (typeStr == "local_gaussian") params.type = processing::ThresholdType::LOCAL_GAUSSIAN;
+        else                                  params.type = processing::ThresholdType::GLOBAL_OTSU;
 
-        params.threshold = body.value("threshold",  127.0);
+        params.threshold = body.value("threshold", 127.0);
         int bs = body.value("block_size", 11);
-        if (bs % 2 == 0) bs += 1;  // OpenCV adaptive threshold requires odd block size
+        if (bs % 2 == 0) bs += 1;   // OpenCV adaptive threshold requires odd block size
         params.blockSize = bs;
-        params.C         = body.value("c",          2.0);
+        params.C         = body.value("c", 2.0);
 
         processing::ThresholdResult result = processing::ThresholdProcessor::apply(img.original, params);
 
         setCORSHeaders(res);
         json response = {
-            {"success",            true},
-            {"image",              imageToB64(result.binary)},
-            {"applied_threshold",  result.appliedThreshold}
+            {"success",           true},
+            {"image",             imageToB64(result.binary)},
+            {"applied_threshold", result.appliedThreshold}
         };
         res.set_content(response.dump(), "application/json");
     } catch (const std::exception& e) {
@@ -365,14 +408,14 @@ void Router::handleFrequency(const httplib::Request& req, httplib::Response& res
             ? processing::FrequencyFilterType::HIGH_PASS
             : processing::FrequencyFilterType::LOW_PASS;
         params.cutoff = body.value("cutoff", 30.0);
-        
+
         processing::FrequencyResult result = processing::FrequencyProcessor::apply(img.original, params);
 
         setCORSHeaders(res);
         json response = {
-            {"success",       true},
-            {"image",         imageToB64(result.filtered)},
-            {"spectrum",      imageToB64(result.magnitudeLog)}
+            {"success",  true},
+            {"image",    imageToB64(result.filtered)},
+            {"spectrum", imageToB64(result.magnitudeLog)}
         };
         res.set_content(response.dump(), "application/json");
     } catch (const std::exception& e) {
@@ -398,14 +441,15 @@ void Router::handleHybrid(const httplib::Request& req, httplib::Response& res) {
         params.highPassCutoff = body.value("high_cutoff", 20.0);
         params.blendAlpha     = body.value("alpha",        0.5);
 
-        processing::HybridResult result = processing::HybridProcessor::create(img1.original, img2.original, params);
+        processing::HybridResult result = processing::HybridProcessor::create(
+            img1.original, img2.original, params);
 
         setCORSHeaders(res);
         json response = {
-            {"success",         true},
-            {"low_freq_image",  imageToB64(result.lowFreqImage)},
-            {"high_freq_image", imageToB64(result.highFreqImage)},
-            {"hybrid_image",    imageToB64(result.hybridImage)}
+            {"success",        true},
+            {"low_freq_image", imageToB64(result.lowFreqImage)},
+            {"high_freq_image",imageToB64(result.highFreqImage)},
+            {"hybrid_image",   imageToB64(result.hybridImage)}
         };
         res.set_content(response.dump(), "application/json");
     } catch (const std::exception& e) {

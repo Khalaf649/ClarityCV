@@ -1,31 +1,85 @@
 #pragma once
+
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <string>
 
 namespace processing {
 
-struct ChannelHistogram {
-    std::string          label;   // "gray", "red", "green", "blue"
-    std::vector<double>  bins;    // 256 frequency values (normalized 0-1)
-    std::vector<double>  cdf;     // Cumulative distribution function
+// ---------------------------------------------------------------------------
+// Channel histogram structure
+// ---------------------------------------------------------------------------
+
+struct ChannelHistogram
+{
+    std::string label;
+
+    // histogram bins (256 values)
+    std::vector<float> bins;
+
+    // cumulative distribution function (normalized 0..1)
+    std::vector<float> cdf;
+
+    // distribution curve stats (computed from bins)
+    double mean   = 0.0;
+    double stddev = 0.0;
 };
 
-struct HistogramResult {
+
+// ---------------------------------------------------------------------------
+// Histogram result structure
+// ---------------------------------------------------------------------------
+
+struct HistogramResult
+{
     std::vector<ChannelHistogram> channels;
-    cv::Mat                       plotImage;   // Rendered histogram image (PNG)
+
+    // plain histogram plot
+    cv::Mat plotImage;
+
+    // histogram bars + Gaussian distribution curve overlay
+    cv::Mat plotImageWithCurve;
 };
 
-class HistogramProcessor {
+
+// ---------------------------------------------------------------------------
+// Histogram processor
+// ---------------------------------------------------------------------------
+
+class HistogramProcessor
+{
 public:
+
+    // compute histogram, plain plot, and plot-with-curve
     static HistogramResult compute(const cv::Mat& input);
-    static cv::Mat          equalize(const cv::Mat& input);
-    static cv::Mat          normalize(const cv::Mat& input);
+
+    // equalize histogram
+    static cv::Mat equalize(const cv::Mat& input);
+
+    // normalize image
+    static cv::Mat normalize(const cv::Mat& input);
 
 private:
-    static ChannelHistogram computeChannel(const cv::Mat& channel, const std::string& label);
-    static cv::Mat          renderHistogram(const std::vector<ChannelHistogram>& channels,
-                                            int width = 512, int height = 400);
+
+    // compute single channel histogram (also fills mean & stddev)
+    static ChannelHistogram computeChannel(
+        const cv::Mat& channel,
+        const std::string& label
+    );
+
+    // render plain histogram lines
+    static cv::Mat renderHistogram(
+        const std::vector<ChannelHistogram>& channels,
+        int width,
+        int height
+    );
+
+    // render histogram bars + Gaussian distribution curve overlay
+    static cv::Mat renderHistogramWithCurve(
+        const std::vector<ChannelHistogram>& channels,
+        int width,
+        int height
+    );
 };
 
 } // namespace processing

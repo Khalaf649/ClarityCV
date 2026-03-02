@@ -44,10 +44,22 @@ export interface HistogramChannel {
   cdf: number[];
 }
 
+export interface HistogramChannelWithStats extends HistogramChannel {
+  mean: number;
+  stddev: number;
+}
+
 export interface HistogramResponse {
   success: boolean;
   channels: HistogramChannel[];
   plot: string;
+}
+
+export interface HistogramCurveResponse {
+  success: boolean;
+  channels: HistogramChannelWithStats[];
+  plot: string;        // plain histogram
+  plot_curve: string;  // histogram + Gaussian distribution curve
 }
 
 export interface ThresholdResponse extends ImageResponse {
@@ -106,6 +118,9 @@ export const api = {
 
   histogram: (image: string) =>
     post<HistogramResponse>("/histogram", { image }),
+
+  histogramCurve: (image: string) =>
+    post<HistogramCurveResponse>("/histogram_curve", { image }),
 
   equalize: (image: string) =>
     post<ImageResponse>("/equalize", { image }),
