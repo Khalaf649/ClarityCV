@@ -1,6 +1,6 @@
 #pragma once
 #include <opencv2/opencv.hpp>
-
+#include <vector>
 namespace processing {
 
 struct HybridParams {
@@ -22,10 +22,9 @@ public:
                                const HybridParams& params);
 
 private:
-    static cv::Mat extractLowFrequency(const cv::Mat& input, double cutoff);
-    static cv::Mat extractHighFrequency(const cv::Mat& input, double cutoff);
-    static cv::Mat toGray(const cv::Mat& input);
-    static cv::Mat applyDFTFilter(const cv::Mat& gray, double cutoff, bool lowPass);
+    static std::vector<cv::Mat> extractLowFrequency(const cv::Mat& input, double cutoff);
+    static std::vector<cv::Mat> extractHighFrequency(const cv::Mat& input, double cutoff);
+    // static cv::Mat applyDFTFilter(const cv::Mat& gray, double cutoff, bool lowPass);
 };
 
 } // namespace processing

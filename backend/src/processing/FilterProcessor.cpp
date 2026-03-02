@@ -88,6 +88,9 @@ cv::Mat FilterProcessor::applyAverage(const cv::Mat& input, int kernelSize) {
 }
 
 cv::Mat FilterProcessor::applyGaussian(const cv::Mat& input, int kernelSize, double sigma) {
+    if (sigma <= 0.0) {
+        sigma = 0.3 * ((kernelSize - 1) * 0.5 - 1) + 0.8; // OpenCV default sigma calculation
+    }
     cv::Mat result(input.size(), input.type());
     int k = kernelSize / 2;
     for (int y= 0; y < input.rows; ++y){

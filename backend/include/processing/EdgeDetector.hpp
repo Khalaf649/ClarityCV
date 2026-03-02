@@ -41,7 +41,7 @@ private:
     static EdgeResult detectSobel(const cv::Mat& gray, const EdgeParams& params);
     static EdgeResult detectRoberts(const cv::Mat& gray);
     static EdgeResult detectPrewitt(const cv::Mat& gray);
-    static EdgeResult detectCanny(const cv::Mat& gray, double low, double high);
+    static EdgeResult    detectCanny(const cv::Mat& gray, double low, double high);
     static cv::Mat    toGray(const cv::Mat& input);
     static cv::Mat    magnitude(const cv::Mat& gx, const cv::Mat& gy);
     static cv::Mat    normalize8U(const cv::Mat& src);

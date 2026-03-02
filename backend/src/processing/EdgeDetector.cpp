@@ -213,6 +213,7 @@ EdgeResult EdgeDetector::detectCanny(const cv::Mat& gray, double low, double hig
     result.edgeX = cv::Mat(); // not applicable for Canny
     result.edgeY = cv::Mat(); // not applicable for Canny
     result.combined = edges;
-    return result;}
+    return result;
+}
 
 } // namespace processing

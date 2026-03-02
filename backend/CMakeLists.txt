@@ -31,6 +31,7 @@ find_package(nlohmann_json REQUIRED)
 set(SOURCES
     src/main.cpp
     src/utils/ImageUtils.cpp
+    src/utils/FourierUtils.cpp 
     src/processing/NoiseProcessor.cpp
     src/processing/FilterProcessor.cpp
     src/processing/EdgeDetector.cpp
@@ -45,8 +46,8 @@ set(SOURCES
 # ---------------------------------------------------------------------------
 # Target
 # ---------------------------------------------------------------------------
-add_executable(cv_backend ${SOURCES})
 
+add_executable(cv_backend ${SOURCES})
 target_include_directories(cv_backend
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include

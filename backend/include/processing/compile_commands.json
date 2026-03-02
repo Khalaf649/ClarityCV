@@ -1,0 +1,68 @@
+[
+{
+  "directory": "/home/mannon/ClarityCV/backend/build",
+  "command": "/usr/bin/c++ -DCPPHTTPLIB_OPENSSL_SUPPORT -I/home/mannon/ClarityCV/backend/include -isystem /usr/include/opencv4 -O3 -DNDEBUG -std=c++17 -O3 -DNDEBUG -o CMakeFiles/cv_backend.dir/src/main.cpp.o -c /home/mannon/ClarityCV/backend/src/main.cpp",
+  "file": "/home/mannon/ClarityCV/backend/src/main.cpp",
+  "output": "CMakeFiles/cv_backend.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/mannon/ClarityCV/backend/build",
+  "command": "/usr/bin/c++ -DCPPHTTPLIB_OPENSSL_SUPPORT -I/home/mannon/ClarityCV/backend/include -isystem /usr/include/opencv4 -O3 -DNDEBUG -std=c++17 -O3 -DNDEBUG -o CMakeFiles/cv_backend.dir/src/utils/ImageUtils.cpp.o -c /home/mannon/ClarityCV/backend/src/utils/ImageUtils.cpp",
+  "file": "/home/mannon/ClarityCV/backend/src/utils/ImageUtils.cpp",
+  "output": "CMakeFiles/cv_backend.dir/src/utils/ImageUtils.cpp.o"
+},
+{
+  "directory": "/home/mannon/ClarityCV/backend/build",
+  "command": "/usr/bin/c++ -DCPPHTTPLIB_OPENSSL_SUPPORT -I/home/mannon/ClarityCV/backend/include -isystem /usr/include/opencv4 -O3 -DNDEBUG -std=c++17 -O3 -DNDEBUG -o CMakeFiles/cv_backend.dir/src/processing/NoiseProcessor.cpp.o -c /home/mannon/ClarityCV/backend/src/processing/NoiseProcessor.cpp",
+  "file": "/home/mannon/ClarityCV/backend/src/processing/NoiseProcessor.cpp",
+  "output": "CMakeFiles/cv_backend.dir/src/processing/NoiseProcessor.cpp.o"
+},
+{
+  "directory": "/home/mannon/ClarityCV/backend/build",
+  "command": "/usr/bin/c++ -DCPPHTTPLIB_OPENSSL_SUPPORT -I/home/mannon/ClarityCV/backend/include -isystem /usr/include/opencv4 -O3 -DNDEBUG -std=c++17 -O3 -DNDEBUG -o CMakeFiles/cv_backend.dir/src/processing/FilterProcessor.cpp.o -c /home/mannon/ClarityCV/backend/src/processing/FilterProcessor.cpp",
+  "file": "/home/mannon/ClarityCV/backend/src/processing/FilterProcessor.cpp",
+  "output": "CMakeFiles/cv_backend.dir/src/processing/FilterProcessor.cpp.o"
+},
+{
+  "directory": "/home/mannon/ClarityCV/backend/build",
+  "command": "/usr/bin/c++ -DCPPHTTPLIB_OPENSSL_SUPPORT -I/home/mannon/ClarityCV/backend/include -isystem /usr/include/opencv4 -O3 -DNDEBUG -std=c++17 -O3 -DNDEBUG -o CMakeFiles/cv_backend.dir/src/processing/EdgeDetector.cpp.o -c /home/mannon/ClarityCV/backend/src/processing/EdgeDetector.cpp",
+  "file": "/home/mannon/ClarityCV/backend/src/processing/EdgeDetector.cpp",
+  "output": "CMakeFiles/cv_backend.dir/src/processing/EdgeDetector.cpp.o"
+},
+{
+  "directory": "/home/mannon/ClarityCV/backend/build",
+  "command": "/usr/bin/c++ -DCPPHTTPLIB_OPENSSL_SUPPORT -I/home/mannon/ClarityCV/backend/include -isystem /usr/include/opencv4 -O3 -DNDEBUG -std=c++17 -O3 -DNDEBUG -o CMakeFiles/cv_backend.dir/src/processing/HistogramProcessor.cpp.o -c /home/mannon/ClarityCV/backend/src/processing/HistogramProcessor.cpp",
+  "file": "/home/mannon/ClarityCV/backend/src/processing/HistogramProcessor.cpp",
+  "output": "CMakeFiles/cv_backend.dir/src/processing/HistogramProcessor.cpp.o"
+},
+{
+  "directory": "/home/mannon/ClarityCV/backend/build",
+  "command": "/usr/bin/c++ -DCPPHTTPLIB_OPENSSL_SUPPORT -I/home/mannon/ClarityCV/backend/include -isystem /usr/include/opencv4 -O3 -DNDEBUG -std=c++17 -O3 -DNDEBUG -o CMakeFiles/cv_backend.dir/src/processing/ThresholdProcessor.cpp.o -c /home/mannon/ClarityCV/backend/src/processing/ThresholdProcessor.cpp",
+  "file": "/home/mannon/ClarityCV/backend/src/processing/ThresholdProcessor.cpp",
+  "output": "CMakeFiles/cv_backend.dir/src/processing/ThresholdProcessor.cpp.o"
+},
+{
+  "directory": "/home/mannon/ClarityCV/backend/build",
+  "command": "/usr/bin/c++ -DCPPHTTPLIB_OPENSSL_SUPPORT -I/home/mannon/ClarityCV/backend/include -isystem /usr/include/opencv4 -O3 -DNDEBUG -std=c++17 -O3 -DNDEBUG -o CMakeFiles/cv_backend.dir/src/processing/FrequencyProcessor.cpp.o -c /home/mannon/ClarityCV/backend/src/processing/FrequencyProcessor.cpp",
+  "file": "/home/mannon/ClarityCV/backend/src/processing/FrequencyProcessor.cpp",
+  "output": "CMakeFiles/cv_backend.dir/src/processing/FrequencyProcessor.cpp.o"
+},
+{
+  "directory": "/home/mannon/ClarityCV/backend/build",
+  "command": "/usr/bin/c++ -DCPPHTTPLIB_OPENSSL_SUPPORT -I/home/mannon/ClarityCV/backend/include -isystem /usr/include/opencv4 -O3 -DNDEBUG -std=c++17 -O3 -DNDEBUG -o CMakeFiles/cv_backend.dir/src/processing/HybridProcessor.cpp.o -c /home/mannon/ClarityCV/backend/src/processing/HybridProcessor.cpp",
+  "file": "/home/mannon/ClarityCV/backend/src/processing/HybridProcessor.cpp",
+  "output": "CMakeFiles/cv_backend.dir/src/processing/HybridProcessor.cpp.o"
+},
+{
+  "directory": "/home/mannon/ClarityCV/backend/build",
+  "command": "/usr/bin/c++ -DCPPHTTPLIB_OPENSSL_SUPPORT -I/home/mannon/ClarityCV/backend/include -isystem /usr/include/opencv4 -O3 -DNDEBUG -std=c++17 -O3 -DNDEBUG -o CMakeFiles/cv_backend.dir/src/server/Server.cpp.o -c /home/mannon/ClarityCV/backend/src/server/Server.cpp",
+  "file": "/home/mannon/ClarityCV/backend/src/server/Server.cpp",
+  "output": "CMakeFiles/cv_backend.dir/src/server/Server.cpp.o"
+},
+{
+  "directory": "/home/mannon/ClarityCV/backend/build",
+  "command": "/usr/bin/c++ -DCPPHTTPLIB_OPENSSL_SUPPORT -I/home/mannon/ClarityCV/backend/include -isystem /usr/include/opencv4 -O3 -DNDEBUG -std=c++17 -O3 -DNDEBUG -o CMakeFiles/cv_backend.dir/src/server/Router.cpp.o -c /home/mannon/ClarityCV/backend/src/server/Router.cpp",
+  "file": "/home/mannon/ClarityCV/backend/src/server/Router.cpp",
+  "output": "CMakeFiles/cv_backend.dir/src/server/Router.cpp.o"
+}
+]

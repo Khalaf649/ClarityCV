@@ -21,16 +21,52 @@ cv::Mat decodeImageFromBase64(const std::string& base64Str) {
 }
 
 std::string encodeImageToBase64(const cv::Mat& image, const std::string& ext) {
+    if(image.empty()) return "";
     std::vector<uchar> buf;
     cv::imencode(ext, image, buf);
     return base64Encode(buf);
 }
 
 cv::Mat toGrayscale(const cv::Mat& image) {
-    if (image.channels() == 1) return image.clone();
-    cv::Mat gray;
-    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
-    return gray;
+    if (image.empty())
+        throw std::invalid_argument("toGrayscale: image is empty");
+
+    // Already grayscale
+    if (image.channels() == 1)
+        return image.clone();
+
+    // 3-channel (BGR)
+    if (image.channels() == 3) {
+        cv::Mat gray(image.size(), CV_8U);
+
+        for (int y = 0; y < image.rows; ++y) {
+            for (int x = 0; x < image.cols; ++x) {
+                cv::Vec3b v = image.at<cv::Vec3b>(y, x);
+                gray.at<uchar>(y, x) = static_cast<uchar>(
+                    0.299 * v[2] + 0.587 * v[1] + 0.114 * v[0]
+                );
+            }
+        }
+        return gray;
+    }
+
+    // 4-channel (BGRA)
+    if (image.channels() == 4) {
+        cv::Mat gray(image.size(), CV_8U);
+
+        for (int y = 0; y < image.rows; ++y) {
+            for (int x = 0; x < image.cols; ++x) {
+                cv::Vec4b v = image.at<cv::Vec4b>(y, x);
+                gray.at<uchar>(y, x) = static_cast<uchar>(
+                    0.299 * v[2] + 0.587 * v[1] + 0.114 * v[0]
+                );
+                // ignore alpha channel v[3]
+            }
+        }
+        return gray;
+    }
+
+    throw std::invalid_argument("toGrayscale: only 1-, 3-, or 4-channel images are supported");
 }
 
 cv::Mat toRGB(const cv::Mat& image) {

@@ -1,5 +1,6 @@
 #include "server/Router.hpp"
 #include "utils/ImageUtils.hpp"
+#include "utils/Image.hpp"
 #include "processing/NoiseProcessor.hpp"
 #include "processing/FilterProcessor.hpp"
 #include "processing/EdgeDetector.hpp"
@@ -100,14 +101,14 @@ void Router::handleLoadImage(const httplib::Request& req, httplib::Response& res
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        cv::Mat img = requireImage(body);
+        utils::Image img(requireImage(body));
         std::string mode = body.value("mode", "rgb");
 
         cv::Mat result;
         if (mode == "gray") {
-            result = utils::toGrayscale(img);
+            result = utils::toGrayscale(img.original);
         } else {
-            result = utils::toRGB(img);
+            result = utils::toRGB(img.original);
         }
 
         setCORSHeaders(res);
@@ -135,7 +136,7 @@ void Router::handleAddNoise(const httplib::Request& req, httplib::Response& res)
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        cv::Mat img = requireImage(body);
+        utils::Image img(requireImage(body));
 
         processing::NoiseParams params;
         std::string typeStr = body.value("type", "gaussian");
@@ -150,7 +151,8 @@ void Router::handleAddNoise(const httplib::Request& req, httplib::Response& res)
         params.saltProb   = body.value("salt_prob",   0.02);
         params.pepperProb = body.value("pepper_prob", 0.02);
 
-        cv::Mat result = processing::NoiseProcessor::addNoise(img, params);
+        cv::Mat result = processing::NoiseProcessor::addNoise(img.original, params);
+        img.noisy = result;
 
         setCORSHeaders(res);
         json response = {{"success", true}, {"image", imageToB64(result)}};
@@ -170,7 +172,7 @@ void Router::handleFilter(const httplib::Request& req, httplib::Response& res) {
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        cv::Mat img = requireImage(body);
+        utils::Image img(requireImage(body));
 
         processing::FilterParams params;
         std::string typeStr = body.value("type", "gaussian");
@@ -183,7 +185,7 @@ void Router::handleFilter(const httplib::Request& req, httplib::Response& res) {
         params.kernelSize = ks;
         params.sigmaX     = body.value("sigma", 0.0);
 
-        cv::Mat result = processing::FilterProcessor::applyFilter(img, params);
+        cv::Mat result = processing::FilterProcessor::applyFilter(img.noisy.empty() ? img.original : img.noisy, params);
 
         setCORSHeaders(res);
         json response = {{"success", true}, {"image", imageToB64(result)}};
@@ -205,7 +207,7 @@ void Router::handleEdgeDetect(const httplib::Request& req, httplib::Response& re
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        cv::Mat img = requireImage(body);
+        utils::Image img(requireImage(body));
 
         processing::EdgeParams params;
         std::string typeStr = body.value("type", "sobel");
@@ -218,7 +220,7 @@ void Router::handleEdgeDetect(const httplib::Request& req, httplib::Response& re
         params.cannyHigh  = body.value("canny_high",  150.0);
         params.sobelKsize = body.value("sobel_ksize", 3);
 
-        processing::EdgeResult result = processing::EdgeDetector::detect(img, params);
+        processing::EdgeResult result = processing::EdgeDetector::detect(img.original, params);
 
         setCORSHeaders(res);
         json response = {
@@ -243,8 +245,8 @@ void Router::handleHistogram(const httplib::Request& req, httplib::Response& res
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        cv::Mat img = requireImage(body);
-        processing::HistogramResult result = processing::HistogramProcessor::compute(img);
+        utils::Image img(requireImage(body));
+        processing::HistogramResult result = processing::HistogramProcessor::compute(img.original);
 
         json channelsJson = json::array();
         for (const auto& ch : result.channels) {
@@ -276,8 +278,8 @@ void Router::handleEqualize(const httplib::Request& req, httplib::Response& res)
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        cv::Mat img    = requireImage(body);
-        cv::Mat result = processing::HistogramProcessor::equalize(img);
+        utils::Image img    = utils::Image(requireImage(body));
+        cv::Mat result = processing::HistogramProcessor::equalize(img.original);
 
         setCORSHeaders(res);
         json response = {{"success", true}, {"image", imageToB64(result)}};
@@ -296,8 +298,8 @@ void Router::handleNormalize(const httplib::Request& req, httplib::Response& res
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        cv::Mat img    = requireImage(body);
-        cv::Mat result = processing::HistogramProcessor::normalize(img);
+        utils::Image img    = utils::Image(requireImage(body));
+        cv::Mat result = processing::HistogramProcessor::normalize(img.original);
 
         setCORSHeaders(res);
         json response = {{"success", true}, {"image", imageToB64(result)}};
@@ -317,7 +319,7 @@ void Router::handleThreshold(const httplib::Request& req, httplib::Response& res
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        cv::Mat img = requireImage(body);
+        utils::Image img(requireImage(body));
 
         processing::ThresholdParams params;
         std::string typeStr = body.value("type", "global_otsu");
@@ -332,7 +334,7 @@ void Router::handleThreshold(const httplib::Request& req, httplib::Response& res
         params.blockSize = bs;
         params.C         = body.value("c",          2.0);
 
-        processing::ThresholdResult result = processing::ThresholdProcessor::apply(img, params);
+        processing::ThresholdResult result = processing::ThresholdProcessor::apply(img.original, params);
 
         setCORSHeaders(res);
         json response = {
@@ -355,7 +357,7 @@ void Router::handleFrequency(const httplib::Request& req, httplib::Response& res
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        cv::Mat img = requireImage(body);
+        utils::Image img(requireImage(body));
 
         processing::FrequencyParams params;
         std::string typeStr = body.value("filter_type", "low_pass");
@@ -363,8 +365,8 @@ void Router::handleFrequency(const httplib::Request& req, httplib::Response& res
             ? processing::FrequencyFilterType::HIGH_PASS
             : processing::FrequencyFilterType::LOW_PASS;
         params.cutoff = body.value("cutoff", 30.0);
-
-        processing::FrequencyResult result = processing::FrequencyProcessor::apply(img, params);
+        
+        processing::FrequencyResult result = processing::FrequencyProcessor::apply(img.original, params);
 
         setCORSHeaders(res);
         json response = {
@@ -388,15 +390,15 @@ void Router::handleHybrid(const httplib::Request& req, httplib::Response& res) {
     json body;
     if (!parseBody(req, res, body)) return;
     try {
-        cv::Mat img1 = requireImage(body, "image1");
-        cv::Mat img2 = requireImage(body, "image2");
+        utils::Image img1(requireImage(body, "image1"));
+        utils::Image img2(requireImage(body, "image2"));
 
         processing::HybridParams params;
         params.lowPassCutoff  = body.value("low_cutoff",  20.0);
         params.highPassCutoff = body.value("high_cutoff", 20.0);
         params.blendAlpha     = body.value("alpha",        0.5);
 
-        processing::HybridResult result = processing::HybridProcessor::create(img1, img2, params);
+        processing::HybridResult result = processing::HybridProcessor::create(img1.original, img2.original, params);
 
         setCORSHeaders(res);
         json response = {

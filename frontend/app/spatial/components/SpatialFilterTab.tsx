@@ -101,7 +101,7 @@ export function SpatialFilterTab() {
   };
 
   const applyEdge = async () => {
-    const src = noisy ?? originalImage;
+    const src = originalImage;
     if (!src) return;
     setLoading(true); setError(null);
     try {

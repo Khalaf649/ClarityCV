@@ -23,7 +23,6 @@ public:
     static FrequencyResult apply(const cv::Mat& input, const FrequencyParams& params);
 
 private:
-    static cv::Mat toGray(const cv::Mat& input);
     static cv::Mat buildMask(int rows, int cols, double cutoff, FrequencyFilterType type);
     static cv::Mat computeMagnitudeSpectrum(const cv::Mat& complexImg);
 };

@@ -18,11 +18,12 @@ cv::Mat NoiseProcessor::addNoise(const cv::Mat& input, const NoiseParams& params
 }
 
 cv::Mat NoiseProcessor::addGaussianNoise(const cv::Mat& input, double mean, double stddev) {
-    cv::Mat noise(input.size(), CV_64F);
-    cv::randn(noise, mean, stddev);
-
     cv::Mat floatInput;
     input.convertTo(floatInput, CV_64F);
+    cv::Mat noise(floatInput.size(), floatInput.type());
+    cv::randn(noise, mean, stddev);
+
+    
 
     cv::Mat result;
     cv::add(floatInput, noise, result);
@@ -34,11 +35,13 @@ cv::Mat NoiseProcessor::addGaussianNoise(const cv::Mat& input, double mean, doub
 }
 
 cv::Mat NoiseProcessor::addUniformNoise(const cv::Mat& input, double low, double high) {
-    cv::Mat noise(input.size(), CV_64F);
-    cv::randu(noise, low, high);
-
     cv::Mat floatInput;
     input.convertTo(floatInput, CV_64F);
+
+    cv::Mat noise(floatInput.size(), floatInput.type());
+    cv::randu(noise, low, high);
+
+    
 
     cv::Mat result;
     cv::add(floatInput, noise, result);
