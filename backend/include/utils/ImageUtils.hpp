@@ -10,4 +10,6 @@ std::string encodeImageToBase64(const cv::Mat& image, const std::string& ext = "
 cv::Mat toGrayscale(const cv::Mat& image);
 cv::Mat toRGB(const cv::Mat& image);
 
+cv::Mat convolutionFast(const cv::Mat& image, const cv::Mat& kernelD, int outDepth = CV_8U);
+
 } // namespace utils

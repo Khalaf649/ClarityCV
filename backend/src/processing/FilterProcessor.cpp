@@ -1,7 +1,5 @@
-// ---------------------------------------------------------------------------
-// Task 2 - Filter noisy image: Average, Gaussian, Median filters
-// ---------------------------------------------------------------------------
 #include "processing/FilterProcessor.hpp"
+#include "utils/ImageUtils.hpp"
 #include <stdexcept>
 
 namespace processing {
@@ -32,117 +30,56 @@ cv::Mat FilterProcessor::applyAverage(const cv::Mat& input, int kernelSize) {
         throw std::invalid_argument("applyAverage: only 8-bit images (CV_8U) are supported");
     }
 
-    const int rows = input.rows;
-    const int cols = input.cols;
-    const int channels = input.channels();
-    const int k = kernelSize / 2;
-    const int area = kernelSize * kernelSize; // for zero-padding we always divide by full kernel area
+    cv::Mat kernel(kernelSize, kernelSize, CV_32F, cv::Scalar(1.0f / (kernelSize * kernelSize)));
 
-    cv::Mat result(input.size(), input.type());
-
-    for (int y = 0; y < rows; ++y) {
-        for (int x = 0; x < cols; ++x) {
-            if (channels == 1) {
-                int sum = 0;
-                for (int j = -k; j <= k; ++j) {
-                    for (int i = -k; i <= k; ++i) {
-                        int ny = y + j;
-                        int nx = x + i;
-                        if (ny >= 0 && ny < rows && nx >= 0 && nx < cols) {
-                            sum += input.at<uchar>(ny, nx);
-                        } else {
-                            // zero padding
-                        }
-                    }
-                }
-                result.at<uchar>(y, x) = static_cast<uchar>(sum / area);
-            } else if (channels == 3) {
-                int sum0 = 0, sum1 = 0, sum2 = 0;
-                for (int j = -k; j <= k; ++j) {
-                    for (int i = -k; i <= k; ++i) {
-                        int ny = y + j;
-                        int nx = x + i;
-                        if (ny >= 0 && ny < rows && nx >= 0 && nx < cols) {
-                            cv::Vec3b v = input.at<cv::Vec3b>(ny, nx);
-                            sum0 += v[0];
-                            sum1 += v[1];
-                            sum2 += v[2];
-                        } else {
-                            // zero padding
-                        }
-                    }
-                }
-                result.at<cv::Vec3b>(y, x) = cv::Vec3b(
-                    static_cast<uchar>(sum0 / area),
-                    static_cast<uchar>(sum1 / area),
-                    static_cast<uchar>(sum2 / area)
-                );
-            } else {
-                throw std::invalid_argument("applyAverage: only 1- or 3-channel images are supported");
-            }
+    if (input.channels() == 1) {
+        return utils::convolutionFast(input, kernel);
+    } else if (input.channels() == 3) {
+        std::vector<cv::Mat> channels;
+        cv::split(input, channels);
+        for (auto& ch : channels) {
+            ch = utils::convolutionFast(ch, kernel);
         }
+        cv::Mat result;
+        cv::merge(channels, result);
+        return result;
+    } else {
+        throw std::invalid_argument("applyAverage: only 1- or 3-channel images are supported");
     }
-
-    return result;
-
 }
 
 cv::Mat FilterProcessor::applyGaussian(const cv::Mat& input, int kernelSize, double sigma) {
     if (sigma <= 0.0) {
         sigma = 0.3 * ((kernelSize - 1) * 0.5 - 1) + 0.8; // OpenCV default sigma calculation
     }
-    cv::Mat result(input.size(), input.type());
+    
     int k = kernelSize / 2;
-    for (int y= 0; y < input.rows; ++y){
-        for (int x = 0; x < input.cols; ++x){
-            if (input.channels() == 1) {
-                double sum = 0.0;
-                double weightSum = 0.0;
-                for (int j = -k; j <= k; ++j) {
-                    for (int i = -k; i <= k; ++i) {
-                        int ny = y + j;
-                        int nx = x + i;
-                        if (ny >= 0 && ny < input.rows && nx >= 0 && nx < input.cols) {
-                            double weight = std::exp(-(i*i + j*j) / (2 * sigma * sigma));
-                            sum += input.at<uchar>(ny, nx) * weight;
-                            weightSum += weight;
-                        }else {
-                            // zero padding
-                        }
-                    }
-                }
-                result.at<uchar>(y, x) = static_cast<uchar>(sum / weightSum);
-            } else if (input.channels() == 3) {
-                double sum0 = 0.0, sum1 = 0.0, sum2 = 0.0;
-                double weightSum = 0.0;
-                for (int j = -k; j <= k; ++j) {
-                    for (int i = -k; i <= k; ++i) {
-                        int ny = y + j;
-                        int nx = x + i;
-                        if (ny >= 0 && ny < input.rows && nx >= 0 && nx < input.cols) {
-                            double weight = std::exp(-(i*i + j*j) / (2 * sigma * sigma));
-                            cv::Vec3b v = input.at<cv::Vec3b>(ny, nx);
-                            sum0 += v[0] * weight;
-                            sum1 += v[1] * weight;
-                            sum2 += v[2] * weight;
-                            weightSum += weight;
-                        } else {
-                            // zero padding
-                        }
-                    }
-                }
-                result.at<cv::Vec3b>(y, x) = cv::Vec3b(
-                    static_cast<uchar>(sum0 / weightSum),
-                    static_cast<uchar>(sum1 / weightSum),
-                    static_cast<uchar>(sum2 / weightSum)
-                );
-            } else {
-                throw std::invalid_argument("applyGaussian: only 1- or 3-channel images are supported");
-            }
+    cv::Mat kernel(kernelSize, kernelSize, CV_32F);
+    double weightSum = 0.0;
+    
+    for (int j = -k; j <= k; ++j) {
+        for (int i = -k; i <= k; ++i) {
+            double weight = std::exp(-(i*i + j*j) / (2 * sigma * sigma));
+            kernel.at<float>(j + k, i + k) = static_cast<float>(weight);
+            weightSum += weight;
         }
     }
-    return result;
+    kernel /= weightSum;
 
+    if (input.channels() == 1) {
+        return utils::convolutionFast(input, kernel);
+    } else if (input.channels() == 3) {
+        std::vector<cv::Mat> channels;
+        cv::split(input, channels);
+        for (auto& ch : channels) {
+            ch = utils::convolutionFast(ch, kernel);
+        }
+        cv::Mat result;
+        cv::merge(channels, result);
+        return result;
+    } else {
+        throw std::invalid_argument("applyGaussian: only 1- or 3-channel images are supported");
+    }
 }
 
 cv::Mat FilterProcessor::applyMedian(const cv::Mat& input, int kernelSize) {

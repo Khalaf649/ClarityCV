@@ -39,6 +39,7 @@ set(SOURCES
     src/processing/ThresholdProcessor.cpp
     src/processing/FrequencyProcessor.cpp
     src/processing/HybridProcessor.cpp
+    src/processing/ActiveContour.cpp
     src/server/Server.cpp
     src/server/Router.cpp
 )

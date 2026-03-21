@@ -78,5 +78,40 @@ cv::Mat toRGB(const cv::Mat& image) {
     return rgb;
 }
 
+cv::Mat convolutionFast(const cv::Mat& image, const cv::Mat& kernelD, int outDepth) {
+    // Work in float throughout
+    cv::Mat kernel;
+    kernelD.convertTo(kernel, CV_32F);
+
+    const int kCX = kernel.cols / 2;
+    const int kCY = kernel.rows / 2;
+
+    cv::Mat padded;
+    cv::copyMakeBorder(image, padded, kCY, kCY, kCX, kCX, cv::BORDER_REFLECT_101);
+
+    cv::Mat result(image.size(), outDepth);
+
+    #pragma omp parallel for schedule(static)
+    for (int y = 0; y < image.rows; ++y) {
+        uchar* dst8 = (outDepth == CV_8U) ? result.ptr<uchar>(y) : nullptr;
+        float* dst32 = (outDepth == CV_32F) ? result.ptr<float>(y) : nullptr;
+        for (int x = 0; x < image.cols; ++x) {
+            float sum = 0.0f;
+            for (int j = 0; j < kernel.rows; ++j) {
+                const uchar* imgRow = padded.ptr<uchar>(y + j);
+                const float* kerRow = kernel.ptr<float>(j);
+                for (int i = 0; i < kernel.cols; ++i)
+                    sum += imgRow[x + i] * kerRow[i];  
+            }
+            if (outDepth == CV_8U) {
+                dst8[x] = cv::saturate_cast<uchar>(sum);
+            } else if (outDepth == CV_32F) {
+                dst32[x] = sum;
+            }
+        }
+    }
+    return result;
+}
+
 } // namespace utils
 

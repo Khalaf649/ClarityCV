@@ -26,6 +26,7 @@ private:
     static void handleThreshold(const httplib::Request& req, httplib::Response& res);
     static void handleFrequency(const httplib::Request& req, httplib::Response& res);
     static void handleHybrid(const httplib::Request& req, httplib::Response& res);
+    static void handleActiveContour(const httplib::Request& req, httplib::Response& res);
     static void handleHealth(const httplib::Request& req, httplib::Response& res);
 };
 

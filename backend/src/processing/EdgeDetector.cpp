@@ -1,7 +1,5 @@
-// ---------------------------------------------------------------------------
-// Task 3 - Edge detection: Sobel, Roberts, Prewitt, Canny
-// ---------------------------------------------------------------------------
 #include "processing/EdgeDetector.hpp"
+#include "utils/ImageUtils.hpp"
 #include <stdexcept>
 #include <cmath>
 
@@ -24,15 +22,6 @@ cv::Mat EdgeDetector::toGray(const cv::Mat& input) {
     throw std::invalid_argument("toGray: only 1- or 3-channel images are supported");
 }
 
-// cv::Mat EdgeDetector::normalize8U(const cv::Mat& src) {
-//     cv::Mat result;
-//     cv::normalize(src, result, 0, 255, cv::NORM_MINMAX, CV_8U);
-//     return result;
-// }
-
-// cv::Mat EdgeDetector::magnitude(const cv::Mat& gx, const cv::Mat& gy) {
-//     throw std::runtime_error("EdgeDetector::magnitude() - not yet implemented.");
-// }
 
 EdgeResult EdgeDetector::detect(const cv::Mat& input, const EdgeParams& params) {
     switch (params.type) {
@@ -81,33 +70,12 @@ cv::Mat EdgeDetector::normalize8U(const cv::Mat& src) {
 
 
 EdgeResult EdgeDetector::detectSobel(const cv::Mat& gray, const EdgeParams& params) {
-    const int kx[3][3] = {
-        {-1, 0, 1},
-        {-2, 0, 2},
-        {-1, 0, 1}
-    };
-    const int ky[3][3] = {
-        {-1, -2, -1},
-        { 0,  0,  0},
-        { 1,  2,  1}
-    };
-    cv::Mat gx(gray.size(), CV_32F, cv::Scalar(0));
-    cv::Mat gy(gray.size(), CV_32F, cv::Scalar(0));
+    cv::Mat kxMat = (cv::Mat_<float>(3, 3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
+    cv::Mat kyMat = (cv::Mat_<float>(3, 3) << -1, -2, -1, 0, 0, 0, 1, 2, 1);
 
-    for (int y = 1; y < gray.rows - 1; ++y) {
-        for (int x = 1; x < gray.cols - 1; ++x) {
-            float sumX = 0, sumY = 0;
-            for (int j = -1; j <= 1; ++j) {
-                for (int i = -1; i <= 1; ++i) {
-                    uchar pixel = gray.at<uchar>(y + j, x + i);
-                    sumX += pixel * kx[j + 1][i + 1];
-                    sumY += pixel * ky[j + 1][i + 1];
-                }
-            }
-            gx.at<float>(y, x) = sumX;
-            gy.at<float>(y, x) = sumY;
-        }
-    }
+    cv::Mat gx = utils::convolutionFast(gray, kxMat, CV_32F);
+    cv::Mat gy = utils::convolutionFast(gray, kyMat, CV_32F);
+
     // compute absolute images and magnitude, normalize to 8-bit for output
     cv::Mat absGx = cv::abs(gx);
     cv::Mat absGy = cv::abs(gy);
@@ -125,31 +93,12 @@ EdgeResult EdgeDetector::detectSobel(const cv::Mat& gray, const EdgeParams& para
 }
 
 EdgeResult EdgeDetector::detectRoberts(const cv::Mat& gray) {
-    const int kx[2][2] = {
-        {1, 0},
-        {0, -1}
-    };
-    const int ky[2][2] = {
-        {0, 1},
-        {-1, 0}
-    };
-    cv::Mat gx(gray.size(), CV_32F, cv::Scalar(0));
-    cv::Mat gy(gray.size(), CV_32F, cv::Scalar(0));
+    cv::Mat kxMat = (cv::Mat_<float>(2, 2) << 1, 0, 0, -1);
+    cv::Mat kyMat = (cv::Mat_<float>(2, 2) << 0, 1, -1, 0);
 
-    for (int y = 0; y < gray.rows - 1; ++y) {
-        for (int x = 0; x < gray.cols - 1; ++x) {
-            float sumX = 0, sumY = 0;
-            for (int j = 0; j <= 1; ++j) {
-                for (int i = 0; i <= 1; ++i) {
-                    uchar pixel = gray.at<uchar>(y + j, x + i);
-                    sumX += pixel * kx[j][i];
-                    sumY += pixel * ky[j][i];
-                }
-            }
-            gx.at<float>(y, x) = sumX;
-            gy.at<float>(y, x) = sumY;
-        }
-    }
+    cv::Mat gx = utils::convolutionFast(gray, kxMat, CV_32F);
+    cv::Mat gy = utils::convolutionFast(gray, kyMat, CV_32F);
+
     // compute absolute images and magnitude, normalize to 8-bit for output
     cv::Mat absGx = cv::abs(gx);
     cv::Mat absGy = cv::abs(gy);
@@ -175,23 +124,12 @@ const int kx[3][3] = {
         { 0,  0,  0},
         { 1,  1,  1}
     };
-    cv::Mat gx(gray.size(), CV_32F, cv::Scalar(0));
-    cv::Mat gy(gray.size(), CV_32F, cv::Scalar(0));
+    cv::Mat kxMat = (cv::Mat_<float>(3, 3) << -1, 0, 1, -1, 0, 1, -1, 0, 1);
+    cv::Mat kyMat = (cv::Mat_<float>(3, 3) << -1, -1, -1, 0, 0, 0, 1, 1, 1);
 
-    for (int y = 1; y < gray.rows - 1; ++y) {
-        for (int x = 1; x < gray.cols - 1; ++x) {
-            float sumX = 0, sumY = 0;
-            for (int j = -1; j <= 1; ++j) {
-                for (int i = -1; i <= 1; ++i) {
-                    uchar pixel = gray.at<uchar>(y + j, x + i);
-                    sumX += pixel * kx[j + 1][i + 1];
-                    sumY += pixel * ky[j + 1][i + 1];
-                }
-            }
-            gx.at<float>(y, x) = sumX;
-            gy.at<float>(y, x) = sumY;
-        }
-    }
+    cv::Mat gx = utils::convolutionFast(gray, kxMat, CV_32F);
+    cv::Mat gy = utils::convolutionFast(gray, kyMat, CV_32F);
+
     // compute absolute images and magnitude, normalize to 8-bit for output
     cv::Mat absGx = cv::abs(gx);
     cv::Mat absGy = cv::abs(gy);

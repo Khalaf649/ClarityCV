@@ -8,6 +8,7 @@
 #include "processing/ThresholdProcessor.hpp"
 #include "processing/FrequencyProcessor.hpp"
 #include "processing/HybridProcessor.hpp"
+#include "processing/ActiveContour.hpp"
 
 #include <httplib.h>
 #include <nlohmann/json.hpp>
@@ -81,6 +82,7 @@ void Router::registerRoutes(httplib::Server& svr) {
     svr.Post("/api/threshold",          handleThreshold);
     svr.Post("/api/frequency",          handleFrequency);
     svr.Post("/api/hybrid",             handleHybrid);
+    svr.Post("/api/active_contour",     handleActiveContour);
 }
 
 // ---------------------------------------------------------------------------
@@ -450,6 +452,53 @@ void Router::handleHybrid(const httplib::Request& req, httplib::Response& res) {
             {"low_freq_image", imageToB64(result.lowFreqImage)},
             {"high_freq_image",imageToB64(result.highFreqImage)},
             {"hybrid_image",   imageToB64(result.hybridImage)}
+        };
+        res.set_content(response.dump(), "application/json");
+    } catch (const std::exception& e) {
+        sendError(res, 422, e.what());
+    }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/active_contour
+// Body: { "image": "<base64>", "alpha": 1.0, "beta": 1.0, "gamma": 1.0, 
+//         "iterations": 100, "control_points": 10, "initial_points": [{"x":10, "y":20}, ...] }
+// ---------------------------------------------------------------------------
+
+void Router::handleActiveContour(const httplib::Request& req, httplib::Response& res) {
+    json body;
+    if (!parseBody(req, res, body)) return;
+    try {
+        utils::Image img(requireImage(body));
+
+        processing::ContourParams params;
+        params.alpha = body.value("alpha", 1.0);
+        params.beta  = body.value("beta", 1.0);
+        params.gamma = body.value("gamma", 1.0);
+        params.iterations = body.value("iterations", 100);
+        params.controlPoints = body.value("controlPoints", 50);
+
+        std::vector<cv::Point> initialPoints;
+        if (body.contains("initial_points") && body["initial_points"].is_array()) {
+            for (const auto& pt : body["initial_points"]) {
+                if (pt.contains("x") && pt.contains("y")) {
+                    initialPoints.push_back(cv::Point(pt["x"].get<int>(), pt["y"].get<int>()));
+                }
+            }
+        }
+
+        processing::ContourResult result = processing::ActiveContour::run_active_contour(img.original, initialPoints, params);
+
+        json pointsJson = json::array();
+        for (const auto& pt : result.points) {
+            pointsJson.push_back({{"x", pt.x}, {"y", pt.y}});
+        }
+
+        setCORSHeaders(res);
+        json response = {
+            {"success", true},
+            {"image",   imageToB64(result.contourImage)},
+            {"points",  pointsJson}
         };
         res.set_content(response.dump(), "application/json");
     } catch (const std::exception& e) {
