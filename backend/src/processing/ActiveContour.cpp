@@ -28,11 +28,10 @@ ContourResult ActiveContour::processGreedy(const cv::Mat& gray, const std::vecto
     EdgeResult sobel = processing::EdgeDetector::detect(blurred, EdgeParams{EdgeType::SOBEL});
     cv::Mat edge = sobel.combined;
 
-    // 3- Single correct normalization to [0,1] then invert
-    //    so strong edges = low energy (snake is attracted to them)
+    // 3-normalization to [0,1] then invert
     cv::Mat edgeNormalized;
-    edge.convertTo(edgeNormalized, CV_64F, 1.0 / 255.0);  // ✅ single division, no double normalize
-    edgeNormalized = 1.0 - edgeNormalized;                 // invert: edges become energy minima
+    edge.convertTo(edgeNormalized, CV_64F, 1.0 / 255.0); 
+    edgeNormalized = 1.0 - edgeNormalized;                 
 
     // 4- Initialize the snake
     int cols = gray.cols;
@@ -58,7 +57,7 @@ ContourResult ActiveContour::processGreedy(const cv::Mat& gray, const std::vecto
     }
 
     int N = static_cast<int>(snake.size());
-    int W = 3;   // ✅ wider search window: 7×7 neighbourhood gives snake more reach per iteration
+    int W = 3;   // search window: 7×7 neighbourhood gives snake more reach per iteration
 
     auto clamp = [&](cv::Point2d p) {
         p.x = std::max(0.0, std::min(p.x, static_cast<double>(cols - 1)));
@@ -76,7 +75,7 @@ ContourResult ActiveContour::processGreedy(const cv::Mat& gray, const std::vecto
     for (int iter = 0; iter < params.iterations; ++iter) {
         bool moved = false;
 
-        // Compute average spacing for continuity normalisation
+        // Compute average spacing for continuity normalisation (Global for all points)
         double avgDist = 0.0;
         for (int i = 0; i < N; ++i) {
             int prev = (i - 1 + N) % N;
@@ -101,8 +100,7 @@ ContourResult ActiveContour::processGreedy(const cv::Mat& gray, const std::vecto
                                 ? std::pow(d - avgDist, 2) / (avgDist * avgDist)
                                 : 0.0;
 
-                    // — Curvature: normalised by avgDist² so it stays comparable
-                    //   to continuity regardless of how far apart points are  ✅
+                    // — Curvature: normalised by avgDist² so it stays comparable to continuity 
                     cv::Point2d curv2d = snake[prev] - 2.0 * candidate + snake[next];
                     double curv = (curv2d.x * curv2d.x + curv2d.y * curv2d.y)
                                 / (avgDist * avgDist + 1e-6);

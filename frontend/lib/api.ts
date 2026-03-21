@@ -154,4 +154,10 @@ export const api = {
       high_cutoff,
       alpha,
     }),
+
+  houghTransform: (
+    image: string,
+    shape_type: "line" | "circle" | "ellipse",
+    votes_threshold: number
+  ) => post<ImageResponse>("/hough_transform", { image, shape_type, votes_threshold }),
 };

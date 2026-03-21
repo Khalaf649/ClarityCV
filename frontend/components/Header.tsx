@@ -8,6 +8,7 @@ const navItems = [
   { href: "/spatial", label: "Spatial Filters" },
   { href: "/histogram", label: "Histogram" },
   { href: "/frequency-domain", label: "Frequency Domain" },
+  { href: "/hough_transform", label: "Hough Transform" },
 ];
 
 export default function Header() {

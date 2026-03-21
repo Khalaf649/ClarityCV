@@ -9,7 +9,7 @@
 #include "processing/FrequencyProcessor.hpp"
 #include "processing/HybridProcessor.hpp"
 #include "processing/ActiveContour.hpp"
-
+#include "processing/HoughProcessor.hpp"
 #include <httplib.h>
 #include <nlohmann/json.hpp>
 #include <iostream>
@@ -83,6 +83,7 @@ void Router::registerRoutes(httplib::Server& svr) {
     svr.Post("/api/frequency",          handleFrequency);
     svr.Post("/api/hybrid",             handleHybrid);
     svr.Post("/api/active_contour",     handleActiveContour);
+    svr.Post("/api/hough_transform",    handleHoughTransform);
 }
 
 // ---------------------------------------------------------------------------
@@ -499,6 +500,38 @@ void Router::handleActiveContour(const httplib::Request& req, httplib::Response&
             {"success", true},
             {"image",   imageToB64(result.contourImage)},
             {"points",  pointsJson}
+        };
+        res.set_content(response.dump(), "application/json");
+    } catch (const std::exception& e) {
+        sendError(res, 422, e.what());
+    }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/hough_transform
+// Body: { "image": "<base64>", "shape_type": "line"|"circle"|"ellipse", "votes_threshold": 100 }
+// ---------------------------------------------------------------------------
+
+void Router::handleHoughTransform(const httplib::Request& req, httplib::Response& res) {
+    json body;
+    if (!parseBody(req, res, body)) return;
+    try {
+        utils::Image img(requireImage(body));
+
+        processing::HoughParams params;
+        std::string shapeStr = body.value("shape_type", "line");
+        if      (shapeStr == "circle")  params.shapeType = processing::HoughShapeType::CIRCLE;
+        else if (shapeStr == "ellipse") params.shapeType = processing::HoughShapeType::ELLIPSE;
+        else                            params.shapeType = processing::HoughShapeType::LINE;
+
+        params.votesThreshold = body.value("votes_threshold", 100);
+
+        processing::HoughResult result = processing::HoughProcessor::apply(img.original, params);
+
+        setCORSHeaders(res);
+        json response = {
+            {"success", true},
+            {"image",   imageToB64(result.transformImage)}
         };
         res.set_content(response.dump(), "application/json");
     } catch (const std::exception& e) {

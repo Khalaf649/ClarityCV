@@ -40,6 +40,7 @@ set(SOURCES
     src/processing/FrequencyProcessor.cpp
     src/processing/HybridProcessor.cpp
     src/processing/ActiveContour.cpp
+    src/processing/HoughProcessor.cpp
     src/server/Server.cpp
     src/server/Router.cpp
 )
