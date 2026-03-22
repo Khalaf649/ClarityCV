@@ -7,11 +7,12 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { ControlPanel } from "@/components/ControlPanel";
 import { useImageContext } from "@/contexts/ImageContext";
+import { ParametersPanel } from "./ParametersPanel";
 import { api } from "@/lib/api";
 
 const shapeOptions = [
-  { value: "line",    label: "Line" },
-  { value: "circle",  label: "Circle" },
+  { value: "line", label: "Line" },
+  { value: "circle", label: "Circle" },
   { value: "ellipse", label: "Ellipse" },
 ];
 
@@ -22,7 +23,7 @@ export function HoughTransformTab() {
 
   const [shapeType, setShapeType] = useState("line");
   const [votesThreshold, setVotesThreshold] = useState(100);
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,21 +62,17 @@ export function HoughTransformTab() {
         {error && <p className="text-xs text-red-400">{error}</p>}
         {loading && <p className="text-xs text-primary animate-pulse">Processing…</p>}
 
-        <ControlPanel title="Hough Transform">
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs text-muted-foreground">Shape Type</label>
-              <Select value={shapeType} onValueChange={setShapeType} options={shapeOptions} className="mt-1" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Votes Threshold: {votesThreshold}</label>
-              <Slider value={[votesThreshold]} onValueChange={([v]) => setVotesThreshold(v)} min={1} max={300} step={1} className="mt-2" />
-            </div>
-            <Button onClick={applyHough} disabled={!originalImage || loading} className="w-full" size="sm">
-              Apply
-            </Button>
-          </div>
-        </ControlPanel>
+        <ParametersPanel
+          shapeType={shapeType}
+          setShapeType={setShapeType}
+          shapeOptions={shapeOptions}
+          votesThreshold={votesThreshold}
+          setVotesThreshold={setVotesThreshold}
+          applyHough={applyHough}
+          originalImage={originalImage}
+          loading={loading}
+          error={error}
+        />
       </div>
     </div>
   );
