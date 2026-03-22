@@ -22,6 +22,13 @@ const routes = [
       "Explore FFT-based low/high-pass filtering with real-time spectrum preview, and create hybrid images by mixing frequency components of two images.",
     icon: "🌊",
   },
+  {
+    href: "/active_contour",
+    title: "Active Contour",
+    description:
+      "Use active contours (snakes) to detect and trace object boundaries. Place control points on an image and configure alpha, beta, and gamma parameters to guide the contour evolution.",
+    icon: "🐍",
+  },
 ];
 
 export default function HomePage() {

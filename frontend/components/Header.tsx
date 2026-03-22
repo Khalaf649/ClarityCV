@@ -9,6 +9,7 @@ const navItems = [
   { href: "/histogram", label: "Histogram" },
   { href: "/frequency-domain", label: "Frequency Domain" },
   { href: "/hough_transform", label: "Hough Transform" },
+  { href: "/active_contour", label: "Active Contour" },
 ];
 
 export default function Header() {

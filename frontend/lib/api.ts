@@ -79,6 +79,13 @@ export interface HybridResponse {
   hybrid_image: string;
 }
 
+export interface ContourPoint {
+  x: number;
+  y: number;
+}
+
+
+
 // ---------------------------------------------------------------------------
 // API calls
 // ---------------------------------------------------------------------------
@@ -160,4 +167,21 @@ export const api = {
     shape_type: "line" | "circle" | "ellipse",
     votes_threshold: number
   ) => post<ImageResponse>("/hough_transform", { image, shape_type, votes_threshold }),
+
+  activeContour: (
+    image: string,
+    alpha: number,
+    beta: number,
+    gamma: number,
+    iterations: number,
+    initial_points: ContourPoint[],
+  ) =>
+    post<ImageResponse>("/active_contour", {
+      image,
+      alpha,
+      beta,
+      gamma,
+      iterations,
+      initial_points,
+    }),
 };

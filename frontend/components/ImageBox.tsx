@@ -9,6 +9,10 @@ interface ImageBoxProps {
   image?: string | null;
   onUpload?: (file: File) => void;
   className?: string;
+  /** Points to render as overlay on the image */
+  activePoints?: Array<{ x: number; y: number }>;
+  /** Callback fired when the image is clicked with coordinates */
+  onImageClick?: (coords: { x: number; y: number }) => void;
 }
 
 export function ImageBox({
@@ -16,6 +20,8 @@ export function ImageBox({
   image,
   onUpload,
   className = "",
+  activePoints,
+  onImageClick,
 }: ImageBoxProps) {
   const handleClick = () => {
     if (!onUpload) return;
@@ -34,6 +40,14 @@ export function ImageBox({
     if (onUpload && e.dataTransfer.files[0]) onUpload(e.dataTransfer.files[0]);
   };
 
+  const handleImageContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!src || !onImageClick) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    onImageClick({ x, y });
+  };
+
   const src = image ? toDataUrl(image) : null;
 
   return (
@@ -47,10 +61,13 @@ export function ImageBox({
           onUpload && !src
             ? "cursor-pointer hover:border-primary transition-colors"
             : ""
-        }`}
+        } ${onImageClick && src ? "cursor-crosshair" : ""}`}
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
-        onClick={onUpload && !src ? handleClick : undefined}
+        onClick={(e) => {
+          if (onUpload && !src) handleClick();
+          else if (onImageClick && src) handleImageContainerClick(e);
+        }}
         role={onUpload && !src ? "button" : undefined}
         tabIndex={onUpload && !src ? 0 : undefined}
         aria-label={onUpload && !src ? `Upload ${title}` : undefined}
@@ -63,6 +80,22 @@ export function ImageBox({
               alt={title}
               className="max-w-full max-h-full object-contain"
             />
+            
+            {/* Active points overlay */}
+            {activePoints &&
+              activePoints.map((point, idx) => (
+                <div
+                  key={idx}
+                  className="absolute w-3 h-3 bg-red-500 rounded-full border border-red-300 pointer-events-none"
+                  style={{
+                    left: `${point.x}px`,
+                    top: `${point.y}px`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                  title={`Point ${idx + 1}: (${Math.round(point.x)}, ${Math.round(point.y)})`}
+                />
+              ))}
+
             {onUpload && (
               <button
                 onClick={(e) => {
