@@ -15,6 +15,8 @@ struct ContourParams {
     double      gamma      = 1.0;  // Image energy
     int         iterations = 100;
     int         controlPoints = 100;
+    double kappa      = -0.3;  // balloon force: negative = expand, positive = shrink
+int    searchRadius = 5;   // search window half-size
 };
 
 struct ContourResult {
