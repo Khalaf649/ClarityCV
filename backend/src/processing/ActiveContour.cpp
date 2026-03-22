@@ -17,126 +17,137 @@ ContourResult ActiveContour::run_active_contour(const cv::Mat& input, const std:
 }
 
 ContourResult ActiveContour::processGreedy(const cv::Mat& gray, const std::vector<cv::Point>& initialPoints, const ContourParams& params) {
-    // 1. Pre-processing for a smooth energy field
-    cv::Mat blurred;
-    cv::GaussianBlur(gray, blurred, cv::Size(7, 7), 0);
-
-    // Create a Distance Transform map: 0 at edges, increasing as we move away
-    cv::Mat edges, distTransform;
-    cv::Canny(blurred, edges, 50, 150);
-    cv::bitwise_not(edges, edges); // Invert so edges are 0
-    cv::distanceTransform(edges, distTransform, cv::DIST_L2, 3);
     
-    // Normalize distance transform to [0, 1] for stable energy calculation
-    cv::normalize(distTransform, distTransform, 0, 1, cv::NORM_MINMAX);
+    // 1- Apply Gaussian blur to reduce noise
+    processing::FilterParams blurParams;
+    blurParams.type       = processing::FilterType::GAUSSIAN;
+    blurParams.kernelSize = 15;   // larger kernel = smoother gradient field, fewer local traps
+    blurParams.sigmaX      = 3;
+    cv::Mat blurred = processing::FilterProcessor::applyFilter(gray, blurParams);
 
-    // 2. Initialize Snake
+    // 2- Use Sobel operator to compute the gradient magnitude
+    cv::Mat edge;
+    cv::Canny(blurred, edge, 50, 100);
+
+    // 3- Single correct normalization to [0,1] then invert
+    cv::Mat edgeNormalized;
+    edge.convertTo(edgeNormalized, CV_64F, 1.0 / 255.0); 
+    edgeNormalized = 1.0 - edgeNormalized;                 // invert: edges become energy minima
+
+    // 4- Initialize the snake
     int cols = gray.cols;
     int rows = gray.rows;
     std::vector<cv::Point2d> snake;
+
     if (!initialPoints.empty()) {
-        for (auto p : initialPoints) snake.push_back(cv::Point2d(p.x, p.y));
+        snake.assign(initialPoints.begin(), initialPoints.end());
     } else {
-        // Default circle initialization
-        int N = params.controlPoints > 3 ? params.controlPoints : 40;
+        int N = params.controlPoints > 3 ? params.controlPoints : 50; 
+
+        // Logical initialization: A circle centered in the image spanning 80% of the minor dimension
         cv::Point2d center(cols / 2.0, rows / 2.0);
         double radius = std::min(cols, rows) * 0.4;
+
         for (int i = 0; i < N; ++i) {
             double theta = 2.0 * CV_PI * i / N;
-            snake.push_back({center.x + radius * std::cos(theta), center.y + radius * std::sin(theta)});
+            snake.push_back(cv::Point2d(
+                center.x + radius * std::cos(theta),
+                center.y + radius * std::sin(theta)
+            ));
         }
     }
 
     int N = static_cast<int>(snake.size());
-    int W = 3; // 7x7 search window
+    int W = 11;   
 
-    // 3. Iterative Optimization
+    auto clamp = [&](cv::Point2d p) {
+        p.x = std::max(0.0, std::min(p.x, static_cast<double>(cols - 1)));
+        p.y = std::max(0.0, std::min(p.y, static_cast<double>(rows - 1)));
+        return p;
+    };
+
+    auto getEimage = [&](int x, int y) -> double {
+        x = std::clamp(x, 0, cols - 1);
+        y = std::clamp(y, 0, rows - 1);
+        return edgeNormalized.at<double>(y, x);
+    };
+
+    // 5- Iteratively move each snake point to minimise total energy
     for (int iter = 0; iter < params.iterations; ++iter) {
-        int pointsMoved = 0;
+        bool moved = false;
 
-        // Calculate average distance for continuity term
-        double avgDist = 0;
+        // Compute average spacing for continuity normalisation
+        double avgDist = 0.0;
         for (int i = 0; i < N; ++i) {
-            avgDist += cv::norm(snake[i] - snake[(i + 1) % N]);
+            int prev = (i - 1 + N) % N;
+            avgDist += cv::norm(snake[i] - snake[prev]);
         }
         avgDist /= N;
 
         for (int i = 0; i < N; ++i) {
-            cv::Point2d prev = snake[(i - 1 + N) % N];
-            cv::Point2d next = snake[(i + 1) % N];
-            
-            double minEnergy = std::numeric_limits<double>::max();
+            int prev = (i - 1 + N) % N;
+            int next = (i + 1) % N;
+
             cv::Point2d bestPos = snake[i];
+            double      bestE   = std::numeric_limits<double>::max();
 
-            // Buffers to store neighborhood energies for normalization
-            std::vector<double> e_cont, e_curv, e_img;
-            std::vector<cv::Point2d> candidates;
-
-            // First pass: Calculate raw energies in the neighborhood
             for (int dy = -W; dy <= W; ++dy) {
                 for (int dx = -W; dx <= W; ++dx) {
-                    cv::Point2d v(std::clamp(snake[i].x + dx, 0.0, (double)cols - 1),
-                                  std::clamp(snake[i].y + dy, 0.0, (double)rows - 1));
-                    
-                    candidates.push_back(v);
-                    
-                    // Continuity: minimize deviation from average distance
-                    e_cont.push_back(std::pow(cv::norm(v - prev) - avgDist, 2));
-                    
-                    // Curvature: minimize the second derivative (sharp angles)
-                    cv::Point2d curvature = prev - 2.0 * v + next;
-                    e_curv.push_back(curvature.x * curvature.x + curvature.y * curvature.y);
-                    
-                    // Image: value from the distance transform
-                    e_img.push_back(distTransform.at<float>(static_cast<int>(v.y), static_cast<int>(v.x)));
-                }
-            }
+                    cv::Point2d candidate = clamp({ snake[i].x + dx, snake[i].y + dy });
 
-            // Helper to normalize a vector to [0, 1]
-            auto normalize = [](std::vector<double>& vec) {
-                auto [min, max] = std::minmax_element(vec.begin(), vec.end());
-                double range = *max - *min;
-                for (double& val : vec) {
-                    val = (range > 1e-6) ? (val - *min) / range : 0.0;
-                }
-            };
+                    // — Continuity: penalises uneven spacing between points
+                    double d    = cv::norm(candidate - snake[prev]);
+                    double cont = (avgDist > 1e-6)
+                                ? std::pow(d - avgDist, 2) / (avgDist * avgDist)
+                                : 0.0;
 
-            normalize(e_cont);
-            normalize(e_curv);
-            normalize(e_img);
+                    // — Curvature: normalised by avgDist² so it stays comparable
+                    //   to continuity regardless of how far apart points are  ✅
+                    cv::Point2d curv2d = snake[prev] - 2.0 * candidate + snake[next];
+                    double curv = (curv2d.x * curv2d.x + curv2d.y * curv2d.y)
+                                / (avgDist * avgDist + 1e-6);
 
-            // Second pass: Find candidate with minimum weighted energy
-            for (size_t j = 0; j < candidates.size(); ++j) {
-                double totalE = params.alpha * e_cont[j] + 
-                                params.beta  * e_curv[j] + 
-                                params.gamma * e_img[j];
-                
-                if (totalE < minEnergy) {
-                    minEnergy = totalE;
-                    bestPos = candidates[j];
+                    // — Image energy: low at strong edges, high in flat regions
+                    double eimg = getEimage(
+                        static_cast<int>(candidate.x),
+                        static_cast<int>(candidate.y)
+                    );
+
+                    double totalE = params.alpha * cont
+                                  + params.beta  * curv
+                                  + params.gamma * eimg;
+
+                    if (totalE < bestE) {
+                        bestE   = totalE;
+                        bestPos = candidate;
+                    }
                 }
             }
 
             if (bestPos != snake[i]) {
                 snake[i] = bestPos;
-                pointsMoved++;
+                moved    = true;
             }
         }
 
-        // Convergence check
-        if (pointsMoved < 2) break; 
+        if (!moved) break;  // converged early
     }
 
-    // 4. Pack results
+    // 6- Pack results
     ContourResult result;
-    for (const auto& p : snake) result.points.push_back(cv::Point(p.x, p.y));
+    result.points.reserve(N);
+    for (const auto& p : snake)
+        result.points.emplace_back(static_cast<int>(p.x), static_cast<int>(p.y));
 
-    cv::cvtColor(gray, result.contourImage, cv::COLOR_GRAY2BGR);
+    // Visualisation
+    cv::Mat viz;
+    cv::cvtColor(gray, viz, cv::COLOR_GRAY2BGR);
     for (int i = 0; i < N; ++i) {
-        cv::line(result.contourImage, result.points[i], result.points[(i + 1) % N], cv::Scalar(0, 255, 0), 2);
-        cv::circle(result.contourImage, result.points[i], 3, cv::Scalar(0, 0, 255), -1);
+        cv::circle(viz, result.points[i], 3, cv::Scalar(0, 0, 255), -1);
+        cv::line(viz, result.points[i], result.points[(i + 1) % N],
+                 cv::Scalar(0, 255, 0), 1);
     }
-
+    result.contourImage = viz;
     return result;
 }
 
