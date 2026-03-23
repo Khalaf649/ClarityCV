@@ -179,7 +179,10 @@ export function ActiveContourTab() {
         {state.loading && <p className="text-xs text-primary animate-pulse">Processing…</p>}
         {state.activePoints.length > 0 && (
           <p className="text-xs text-muted-foreground">
-            {state.activePoints.length} point{state.activePoints.length !== 1 ? "s" : ""} placed
+            {state.activePoints.length} control point{state.activePoints.length !== 1 ? "s" : ""} placed
+            {state.activePoints.length > 1
+              ? ". The initial snake follows the lines between consecutive points."
+              : ""}
           </p>
         )}
 

@@ -9,6 +9,74 @@
 
 namespace processing {
 
+namespace {
+
+void appendLinePoints(
+    std::vector<cv::Point>& points,
+    const cv::Point& start,
+    const cv::Point& end,
+    bool includeStart
+) {
+    int x1 = start.x;
+    int y1 = start.y;
+    const int x2 = end.x;
+    const int y2 = end.y;
+
+    const int dx = std::abs(x2 - x1);
+    const int dy = std::abs(y2 - y1);
+    const int sx = (x1 < x2) ? 1 : -1;
+    const int sy = (y1 < y2) ? 1 : -1;
+    int err = dx - dy;
+    bool firstPoint = true;
+
+    while (true) {
+        if ((includeStart || !firstPoint)
+            && (points.empty() || points.back() != cv::Point(x1, y1))) {
+            points.emplace_back(x1, y1);
+        }
+
+        if (x1 == x2 && y1 == y2) {
+            break;
+        }
+
+        const int e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            x1 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y1 += sy;
+        }
+
+        firstPoint = false;
+    }
+}
+
+std::vector<cv::Point> densifyInitialContour(const std::vector<cv::Point>& initialPoints) {
+    if (initialPoints.size() < 3) {
+        return initialPoints;
+    }
+
+    std::vector<cv::Point> densePoints;
+    for (size_t i = 0; i < initialPoints.size(); ++i) {
+        appendLinePoints(
+            densePoints,
+            initialPoints[i],
+            initialPoints[(i + 1) % initialPoints.size()],
+            i == 0
+        );
+    }
+
+    if (densePoints.size() > 1 && densePoints.front() == densePoints.back()) {
+        densePoints.pop_back();
+    }
+
+    return densePoints;
+}
+
+} // namespace
+
 ContourResult ActiveContour::run_active_contour(const cv::Mat& input, const std::vector<cv::Point>& initialPoints, const ContourParams& params) {
     cv::Mat gray = utils::toGrayscale(input);
     switch (params.type) {
@@ -41,7 +109,11 @@ ContourResult ActiveContour::processGreedy(const cv::Mat& gray, const std::vecto
     int rows = gray.rows;
     std::vector<cv::Point2d> snake;
     if (!initialPoints.empty()) {
-        snake.assign(initialPoints.begin(), initialPoints.end());
+        std::vector<cv::Point> sampledInitialPoints = densifyInitialContour(initialPoints);
+        snake.reserve(sampledInitialPoints.size());
+        for (const auto& point : sampledInitialPoints) {
+            snake.emplace_back(point.x, point.y);
+        }
     } else {
         int N = params.controlPoints > 3 ? params.controlPoints : 50;
         cv::Point2d center(cols / 2.0, rows / 2.0);

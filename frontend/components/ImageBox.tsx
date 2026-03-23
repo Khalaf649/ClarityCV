@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { toDataUrl } from "@/lib/imageProcessing";
 
@@ -15,6 +16,17 @@ interface ImageBoxProps {
   onImageClick?: (coords: { x: number; y: number }) => void;
 }
 
+interface ImageMetrics {
+  frameWidth: number;
+  frameHeight: number;
+  displayWidth: number;
+  displayHeight: number;
+  offsetX: number;
+  offsetY: number;
+  naturalWidth: number;
+  naturalHeight: number;
+}
+
 export function ImageBox({
   title,
   image,
@@ -23,6 +35,11 @@ export function ImageBox({
   activePoints,
   onImageClick,
 }: ImageBoxProps) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const [imageMetrics, setImageMetrics] = useState<ImageMetrics | null>(null);
+  const src = image ? toDataUrl(image) : null;
+
   const handleClick = () => {
     if (!onUpload) return;
     const input = document.createElement("input");
@@ -40,15 +57,85 @@ export function ImageBox({
     if (onUpload && e.dataTransfer.files[0]) onUpload(e.dataTransfer.files[0]);
   };
 
+  const syncImageMetrics = useCallback(() => {
+    const frameElement = frameRef.current;
+    const imageElement = imageRef.current;
+    if (!frameElement || !imageElement || imageElement.naturalWidth === 0 || imageElement.naturalHeight === 0) {
+      return;
+    }
+
+    const frameRect = frameElement.getBoundingClientRect();
+    const imageRect = imageElement.getBoundingClientRect();
+
+    setImageMetrics({
+      frameWidth: frameRect.width,
+      frameHeight: frameRect.height,
+      displayWidth: imageRect.width,
+      displayHeight: imageRect.height,
+      offsetX: imageRect.left - frameRect.left,
+      offsetY: imageRect.top - frameRect.top,
+      naturalWidth: imageElement.naturalWidth,
+      naturalHeight: imageElement.naturalHeight,
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!src) return;
+
+    const frameElement = frameRef.current;
+    const imageElement = imageRef.current;
+    if (!frameElement || !imageElement) return;
+
+    const observer = new ResizeObserver(() => {
+      syncImageMetrics();
+    });
+    observer.observe(frameElement);
+    observer.observe(imageElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [src, syncImageMetrics]);
+
   const handleImageContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!src || !onImageClick) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    onImageClick({ x, y });
+
+    const imageElement = imageRef.current;
+    if (!imageElement || imageElement.naturalWidth === 0 || imageElement.naturalHeight === 0) {
+      return;
+    }
+
+    const rect = imageElement.getBoundingClientRect();
+    if (
+      e.clientX < rect.left
+      || e.clientX > rect.right
+      || e.clientY < rect.top
+      || e.clientY > rect.bottom
+    ) {
+      return;
+    }
+
+    const xRatio = rect.width > 0 ? (e.clientX - rect.left) / rect.width : 0;
+    const yRatio = rect.height > 0 ? (e.clientY - rect.top) / rect.height : 0;
+
+    onImageClick({
+      x: Math.round(xRatio * Math.max(imageElement.naturalWidth - 1, 0)),
+      y: Math.round(yRatio * Math.max(imageElement.naturalHeight - 1, 0)),
+    });
   };
 
-  const src = image ? toDataUrl(image) : null;
+  const overlayPoints = activePoints ?? [];
+  const displayPoints = imageMetrics
+    ? overlayPoints.map((point) => ({
+        x:
+          imageMetrics.offsetX
+          + (point.x / Math.max(imageMetrics.naturalWidth - 1, 1)) * imageMetrics.displayWidth,
+        y:
+          imageMetrics.offsetY
+          + (point.y / Math.max(imageMetrics.naturalHeight - 1, 1)) * imageMetrics.displayHeight,
+      }))
+    : [];
+  const overlayPath = displayPoints.map((point) => `${point.x},${point.y}`).join(" ");
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
@@ -74,27 +161,61 @@ export function ImageBox({
       >
         {src ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={src}
-              alt={title}
-              className="max-w-full max-h-full object-contain"
-            />
-            
-            {/* Active points overlay */}
-            {activePoints &&
-              activePoints.map((point, idx) => (
+            <div
+              ref={frameRef}
+              className="relative flex h-full w-full items-center justify-center"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                ref={imageRef}
+                src={src}
+                alt={title}
+                className="block max-h-full max-w-full object-contain"
+                onLoad={syncImageMetrics}
+              />
+
+              {displayPoints.length > 1 && imageMetrics && (
+                <svg
+                  className="absolute inset-0 pointer-events-none"
+                  aria-hidden="true"
+                  viewBox={`0 0 ${imageMetrics.frameWidth} ${imageMetrics.frameHeight}`}
+                  preserveAspectRatio="none"
+                >
+                  {displayPoints.length > 2 && (
+                    <polygon
+                      points={overlayPath}
+                      fill="none"
+                      stroke="rgb(45 212 191 / 0.9)"
+                      strokeWidth={2}
+                      vectorEffect="non-scaling-stroke"
+                      strokeLinejoin="round"
+                    />
+                  )}
+                  {displayPoints.length === 2 && (
+                    <polyline
+                      points={overlayPath}
+                      fill="none"
+                      stroke="rgb(45 212 191 / 0.9)"
+                      strokeWidth={2}
+                      vectorEffect="non-scaling-stroke"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  )}
+                </svg>
+              )}
+
+              {displayPoints.map((point, idx) => (
                 <div
-                  key={idx}
-                  className="absolute w-3 h-3 bg-red-500 rounded-full border border-red-300 pointer-events-none"
+                  key={`${point.x}-${point.y}-${idx}`}
+                  className="absolute z-10 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-red-500 shadow-sm pointer-events-none"
                   style={{
                     left: `${point.x}px`,
                     top: `${point.y}px`,
-                    transform: "translate(-50%, -50%)",
                   }}
-                  title={`Point ${idx + 1}: (${Math.round(point.x)}, ${Math.round(point.y)})`}
                 />
               ))}
+            </div>
 
             {onUpload && (
               <button
