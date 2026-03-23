@@ -527,9 +527,10 @@ void Router::handleHoughTransform(const httplib::Request& req, httplib::Response
         else if (shapeStr == "ellipse") params.shapeType = processing::HoughShapeType::ELLIPSE;
         else                            params.shapeType = processing::HoughShapeType::LINE;
 
-        params.votesThreshold = body.value("votes_threshold", 100);
+        params.threshold = body.value("votes_threshold", 100);
 
-        processing::HoughResult result = processing::HoughProcessor::apply(img.original, params);
+        processing::HoughProcessor processor;
+        processing::HoughResult result = processor.apply(img.original, params);
 
         setCORSHeaders(res);
         json response = {
