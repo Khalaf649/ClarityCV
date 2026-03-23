@@ -6,6 +6,7 @@ import { useImageContext } from "@/contexts/ImageContext";
 import { api } from "@/lib/api";
 import { ParametersPanel } from "./ParametersPanel";
 import { ActionButtons } from "./ActionButtons";
+import { StatisticsPanel } from "./StatisticsPanel";
 
 const DEFAULT_ALPHA = 1.0;
 const DEFAULT_BETA = 1.0;
@@ -21,6 +22,10 @@ export function ActiveContourTab() {
   // Points state
   const [activePoints, setActivePoints] = useState<Array<{ x: number; y: number }>>([]);
 
+  // Statistics state
+  const [perimeter, setPerimeter] = useState<number | null>(null);
+  const [area, setArea] = useState<number | null>(null);
+
   // Parameter sliders
   const [alpha, setAlpha] = useState(DEFAULT_ALPHA);
   const [beta, setBeta] = useState(DEFAULT_BETA);
@@ -31,6 +36,8 @@ export function ActiveContourTab() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+    // setPerimeter(null);
+    // setArea(null);
   // Clear output when image changes
   useEffect(() => {
     setOutputImage(null);
@@ -67,7 +74,10 @@ export function ActiveContourTab() {
         gamma,
         iterations,
         activePoints,
+      
       );
+      setPerimeter(res.perimeter);
+      setArea(res.area);
       setOutputImage(res.image);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Error processing active contour");
@@ -84,6 +94,8 @@ export function ActiveContourTab() {
     setGamma(DEFAULT_GAMMA);
     setIterations(DEFAULT_ITERATIONS);
     setError(null);
+    setArea(null);
+    setPerimeter(null);
   };
 
   return (
@@ -120,6 +132,8 @@ export function ActiveContourTab() {
           onGammaChange={setGamma}
           onIterationsChange={setIterations}
         />
+
+        <StatisticsPanel perimeter={perimeter} area={area} />
 
         <ActionButtons
           onApply={handleApply}

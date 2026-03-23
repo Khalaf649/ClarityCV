@@ -499,7 +499,9 @@ void Router::handleActiveContour(const httplib::Request& req, httplib::Response&
         json response = {
             {"success", true},
             {"image",   imageToB64(result.contourImage)},
-            {"points",  pointsJson}
+            {"points",  pointsJson},
+            {"perimeter", result.perimeter},
+            {"area", result.area}
         };
         res.set_content(response.dump(), "application/json");
     } catch (const std::exception& e) {

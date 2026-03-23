@@ -155,6 +155,23 @@ ContourResult ActiveContour::processGreedy(const cv::Mat& gray, const std::vecto
     for (const auto& p : snake)
         result.points.emplace_back(static_cast<int>(p.x), static_cast<int>(p.y));
 
+    // Calculate perimeter
+    double perimeter = 0.0;
+    for (int i = 0; i < N; ++i) {
+        int next = (i + 1) % N;
+        perimeter += cv::norm(result.points[i] - result.points[next]);
+    }
+    result.perimeter = perimeter;
+
+    // Calculate area using the shoelace formula
+    double area = 0.0;
+    for (int i = 0; i < N; ++i) {
+        int next = (i + 1) % N;
+        area += result.points[i].x * result.points[next].y;
+        area -= result.points[next].x * result.points[i].y;
+    }
+    result.area = std::abs(area) / 2.0;
+
     // Visualisation (unchanged)
     cv::Mat viz;
     cv::cvtColor(gray, viz, cv::COLOR_GRAY2BGR);

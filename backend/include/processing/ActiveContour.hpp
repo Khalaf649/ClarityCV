@@ -20,6 +20,8 @@ struct ContourParams {
 struct ContourResult {
     cv::Mat contourImage;             // Optional visualization
     std::vector<cv::Point> points;    // Resulting contour points
+    double perimeter = 0.0;           // Contour perimeter
+    double area = 0.0;                // Contour area
 };
 
 class ActiveContour {

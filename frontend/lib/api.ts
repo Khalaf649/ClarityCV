@@ -84,6 +84,14 @@ export interface ContourPoint {
   y: number;
 }
 
+export interface ActiveContourResponse {
+  success: boolean;
+  image: string;
+  points: ContourPoint[];
+  perimeter: number;
+  area: number;
+}
+
 
 
 // ---------------------------------------------------------------------------
@@ -176,7 +184,7 @@ export const api = {
     iterations: number,
     initial_points: ContourPoint[],
   ) =>
-    post<ImageResponse>("/active_contour", {
+    post<ActiveContourResponse>("/active_contour", {
       image,
       alpha,
       beta,
