@@ -22,6 +22,7 @@ struct ContourResult {
     std::vector<cv::Point> points;    // Resulting contour points
     double perimeter = 0.0;           // Contour perimeter
     double area = 0.0;                // Contour area
+    std::string chainCode;            // 8-connectivity chain code
 };
 
 class ActiveContour {
@@ -31,6 +32,7 @@ public:
 private:
     static ContourResult processGreedy(const cv::Mat& gray, const std::vector<cv::Point>& initialPoints, const ContourParams& params);
     static cv::Mat toGray(const cv::Mat& input);
+    static std::string computeChainCode8(const std::vector<cv::Point>& points);
 };
 
 } // namespace processing

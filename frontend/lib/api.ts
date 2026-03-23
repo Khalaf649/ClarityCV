@@ -90,6 +90,7 @@ export interface ActiveContourResponse {
   points: ContourPoint[];
   perimeter: number;
   area: number;
+  chainCode: string;
 }
 
 
