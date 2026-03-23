@@ -81,12 +81,14 @@ struct HoughParams {
 
 // ── Result bundle ────────────────────────────────────────────────────────────
 struct HoughResult {
+
     cv::Mat                       transformImage;
     std::vector<HoughLine>        lines;
     std::vector<Circle>           circles;
     std::vector<cv::RotatedRect>  ellipses;
     std::vector<cv::Vec4i>        lineSegments;
     std::vector<cv::Vec3f>        circleVec3f;
+
 };
 
 // ── Processor ────────────────────────────────────────────────────────────────
@@ -107,6 +109,7 @@ private:
     HoughResult applyLine   (const cv::Mat& input, const HoughParams& params);
     HoughResult applyCircle (const cv::Mat& input, const HoughParams& params);
     HoughResult applyEllipse(const cv::Mat& input, const HoughParams& params);
+
 };
 
 } // namespace processing
