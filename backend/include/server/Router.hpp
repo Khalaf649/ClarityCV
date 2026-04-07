@@ -28,6 +28,7 @@ private:
     static void handleHybrid(const httplib::Request& req, httplib::Response& res);
     static void handleActiveContour(const httplib::Request& req, httplib::Response& res);
     static void handleHoughTransform(const httplib::Request& req, httplib::Response& res);
+    static void handleCornerDetection(const httplib::Request& req, httplib::Response& res);
     static void handleHealth(const httplib::Request& req, httplib::Response& res);
 };
 
