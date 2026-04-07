@@ -10,9 +10,9 @@
 #include "processing/HybridProcessor.hpp"
 #include "processing/ActiveContour.hpp"
 #include "processing/HoughProcessor.hpp"
+#include "processing/CornerDetector.hpp"
 #include <httplib.h>
 #include <nlohmann/json.hpp>
-#include <iostream>
 #include <stdexcept>
 
 using json = nlohmann::json;
@@ -84,6 +84,7 @@ void Router::registerRoutes(httplib::Server& svr) {
     svr.Post("/api/hybrid",             handleHybrid);
     svr.Post("/api/active_contour",     handleActiveContour);
     svr.Post("/api/hough_transform",    handleHoughTransform);
+    svr.Post("/api/corner_detection",   handleCornerDetection);
 }
 
 // ---------------------------------------------------------------------------
@@ -536,6 +537,45 @@ void Router::handleHoughTransform(const httplib::Request& req, httplib::Response
         json response = {
             {"success", true},
             {"image",   imageToB64(result.transformImage)}
+        };
+        res.set_content(response.dump(), "application/json");
+    } catch (const std::exception& e) {
+        sendError(res, 422, e.what());
+    }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/corner_detection
+// Body: { "image": "<base64>", "mode": "Harris"|"Shi-Tomasi", "sigma": 1.0, "windowSize": 3, "threshold": 100, "k": 0.04 }
+// ---------------------------------------------------------------------------
+
+void Router::handleCornerDetection(const httplib::Request& req, httplib::Response& res) {
+    json body;
+    if (!parseBody(req, res, body)) return;
+    try {
+        utils::Image img(requireImage(body));
+
+        processing::CornerParams params;
+        std::string modeStr = body.value("mode", "Harris");
+        if (modeStr == "Shi-Tomasi") {
+            params.mode = processing::CornerDetectionMode::SHI_TOMASI;
+        } else {
+            params.mode = processing::CornerDetectionMode::HARRIS;
+        }
+
+        params.sigma = body.value("sigma", 1.0);
+        params.windowSize = body.value("windowSize", 3);
+        params.threshold = body.value("threshold", 100.0);
+        params.k = body.value("k", 0.04);
+
+        processing::CornerResult result = processing::CornerDetector::detect(img.original, params);
+
+        setCORSHeaders(res);
+        json response = {
+            {"success", true},
+            {"image",   imageToB64(result.image)},
+            {"computationTime", result.computationTimeMs},
+            {"featureCount", result.featureCount}
         };
         res.set_content(response.dump(), "application/json");
     } catch (const std::exception& e) {
