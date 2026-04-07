@@ -29,6 +29,13 @@ const routes = [
       "Use active contours (snakes) to detect and trace object boundaries. Place control points on an image and configure alpha, beta, and gamma parameters to guide the contour evolution.",
     icon: "🐍",
   },
+  {
+    href: "/corner-detection",
+    title: "Corner Detection",
+    description:
+      "Detect corners in images using the Harris or Shi-Tomasi (λ-) methods. Interactively adjust the detection mode and parameters like k-factor.",
+    icon: "📐",
+  },
 ];
 
 export default function HomePage() {

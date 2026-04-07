@@ -93,6 +93,13 @@ export interface ActiveContourResponse {
   chainCode: string;
 }
 
+export interface CornerDetectionResponse {
+  success: boolean;
+  image: string;
+  computationTime: number;
+  featureCount: number;
+}
+
 
 
 // ---------------------------------------------------------------------------
@@ -193,4 +200,13 @@ export const api = {
       iterations,
       initial_points,
     }),
+
+  cornerDetection: (
+    image: string,
+    mode: "Harris" | "Shi-Tomasi",
+    sigma: number,
+    windowSize: number,
+    threshold: number,
+    k: number
+  ) => post<CornerDetectionResponse>("/corner_detection", { image, mode, sigma, windowSize, threshold, k }),
 };
