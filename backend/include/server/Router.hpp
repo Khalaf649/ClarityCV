@@ -29,6 +29,8 @@ private:
     static void handleActiveContour(const httplib::Request& req, httplib::Response& res);
     static void handleHoughTransform(const httplib::Request& req, httplib::Response& res);
     static void handleCornerDetection(const httplib::Request& req, httplib::Response& res);
+    static void handleSIFT(const httplib::Request& req, httplib::Response& res);
+    static void handleFeatureMatching(const httplib::Request& req, httplib::Response& res);
     static void handleHealth(const httplib::Request& req, httplib::Response& res);
 };
 

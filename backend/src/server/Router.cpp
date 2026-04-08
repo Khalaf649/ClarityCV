@@ -11,6 +11,8 @@
 #include "processing/ActiveContour.hpp"
 #include "processing/HoughProcessor.hpp"
 #include "processing/CornerDetector.hpp"
+#include "processing/SIFTProcessor.hpp"
+#include "processing/FeatureMatcher.hpp"
 #include <httplib.h>
 #include <nlohmann/json.hpp>
 #include <stdexcept>
@@ -85,6 +87,8 @@ void Router::registerRoutes(httplib::Server& svr) {
     svr.Post("/api/active_contour",     handleActiveContour);
     svr.Post("/api/hough_transform",    handleHoughTransform);
     svr.Post("/api/corner_detection",   handleCornerDetection);
+    svr.Post("/api/sift",                handleSIFT);
+    svr.Post("/api/feature_matching",    handleFeatureMatching);
 }
 
 // ---------------------------------------------------------------------------
@@ -576,6 +580,66 @@ void Router::handleCornerDetection(const httplib::Request& req, httplib::Respons
             {"image",   imageToB64(result.image)},
             {"computationTime", result.computationTimeMs},
             {"featureCount", result.featureCount}
+        };
+        res.set_content(response.dump(), "application/json");
+    } catch (const std::exception& e) {
+        sendError(res, 422, e.what());
+    }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/sift
+// Body: { "image": "<base64>", "contrastThreshold": 0.04, "nfeatures": 500 }
+// ---------------------------------------------------------------------------
+void Router::handleSIFT(const httplib::Request& req, httplib::Response& res) {
+    json body;
+    if (!parseBody(req, res, body)) return;
+    try {
+        utils::Image img(requireImage(body));
+
+        processing::SIFTParams params;
+        params.contrastThreshold = body.value("contrastThreshold", 0.04);
+        params.nfeatures = body.value("nfeatures", 500);
+
+        processing::SIFTResult result = processing::SIFTProcessor::apply(img.original, params);
+
+        setCORSHeaders(res);
+        json response = {
+            {"success", true},
+            {"image", imageToB64(result.image)},
+            {"computationTime", result.computationTimeMs},
+            {"featureCount", result.featureCount}
+        };
+        res.set_content(response.dump(), "application/json");
+    } catch (const std::exception& e) {
+        sendError(res, 422, e.what());
+    }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/feature_matching
+// Body: { "image1": "<base64>", "image2": "<base64>", "method": "SSD"|"NCC" }
+// ---------------------------------------------------------------------------
+void Router::handleFeatureMatching(const httplib::Request& req, httplib::Response& res) {
+    json body;
+    if (!parseBody(req, res, body)) return;
+    try {
+        utils::Image img1(requireImage(body, "image1"));
+        utils::Image img2(requireImage(body, "image2"));
+
+        processing::FeatureMatchingParams params;
+        std::string methodStr = body.value("method", std::string("SSD"));
+        if (methodStr == "NCC") params.method = processing::MatchingMethod::NCC;
+        else params.method = processing::MatchingMethod::SSD;
+
+        processing::FeatureMatchingResult result = processing::FeatureMatcher::match(img1.original, img2.original, params);
+
+        setCORSHeaders(res);
+        json response = {
+            {"success", true},
+            {"image", imageToB64(result.image)},
+            {"matchesCount", result.matchesCount},
+            {"computationTime", result.computationTimeMs}
         };
         res.set_content(response.dump(), "application/json");
     } catch (const std::exception& e) {

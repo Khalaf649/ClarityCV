@@ -42,6 +42,8 @@ set(SOURCES
     src/processing/ActiveContour.cpp
     src/processing/HoughProcessor.cpp
     src/processing/CornerDetector.cpp
+    src/processing/SIFTProcessor.cpp
+    src/processing/FeatureMatcher.cpp
     src/server/Server.cpp
     src/server/Router.cpp
 )
