@@ -100,6 +100,13 @@ export interface CornerDetectionResponse {
   featureCount: number;
 }
 
+export interface SIFTResponse {
+  success: boolean;
+  image: string;
+  computationTime: number;
+  featureCount: number;
+}
+
 
 
 // ---------------------------------------------------------------------------
@@ -209,4 +216,16 @@ export const api = {
     threshold: number,
     k: number
   ) => post<CornerDetectionResponse>("/corner_detection", { image, mode, sigma, windowSize, threshold, k }),
+
+  sift: (
+    image: string,
+    params: { 
+      contrastThreshold: number; 
+      nfeatures: number;
+    },
+  ) => post<SIFTResponse>("/sift", {
+    image,
+    contrastThreshold: params.contrastThreshold,
+    nfeatures: params.nfeatures,
+  }),
 };

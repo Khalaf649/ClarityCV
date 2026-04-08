@@ -598,6 +598,7 @@ void Router::handleSIFT(const httplib::Request& req, httplib::Response& res) {
         utils::Image img(requireImage(body));
 
         processing::SIFTParams params;
+        // Detection parameters from frontend sliders
         params.contrastThreshold = body.value("contrastThreshold", 0.04);
         params.nfeatures = body.value("nfeatures", 500);
 

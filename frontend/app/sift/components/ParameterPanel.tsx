@@ -27,20 +27,6 @@ export function ParameterPanel({
     <ControlPanel title="Parameters" className="space-y-4">
       <div className="space-y-2">
         <div className="flex justify-between">
-          <label className="text-xs text-muted-foreground">Contrast Threshold</label>
-          <span className="text-xs font-mono text-primary">{contrastThreshold.toFixed(2)}</span>
-        </div>
-        <Slider
-          value={[contrastThreshold]}
-          onValueChange={(v) => setContrastThreshold(v[0])}
-          min={0.01}
-          max={0.1}
-          step={0.01}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex justify-between">
           <label className="text-xs text-muted-foreground">N Features</label>
           <span className="text-xs font-mono text-primary">{nfeatures}</span>
         </div>
