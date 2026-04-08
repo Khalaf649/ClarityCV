@@ -16,7 +16,7 @@ endif()
 # ---------------------------------------------------------------------------
 # Dependencies
 # ---------------------------------------------------------------------------
-find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs highgui)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs highgui features2d)
 find_package(Threads REQUIRED)
 
 # nlohmann/json — installed via apt (nlohmann-json3-dev)

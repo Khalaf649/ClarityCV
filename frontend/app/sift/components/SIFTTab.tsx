@@ -46,7 +46,10 @@ export function SIFTTab() {
       // If backend provides an endpoint, call it. Otherwise simulate minimal behavior
       const siftFn = (api as any).sift;
       if (typeof siftFn === "function") {
-        const res = await siftFn(originalImage, { contrastThreshold, nfeatures });
+        const res = await siftFn(originalImage, { 
+          contrastThreshold, 
+          nfeatures,
+        });
         setOutputImage(res.image ?? null);
         setKeypointsCount(res.featureCount ?? res.keypointsCount ?? null);
         setComputationTime(res.computationTime ?? null);
