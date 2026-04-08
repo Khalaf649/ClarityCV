@@ -36,6 +36,13 @@ const routes = [
       "Detect corners in images using the Harris or Shi-Tomasi (λ-) methods. Interactively adjust the detection mode and parameters like k-factor.",
     icon: "📐",
   },
+  {
+    href: "/sift",
+    title: "SIFT Keypoints",
+    description:
+      "Detect and visualize SIFT keypoints. Adjust contrast threshold and number of features for the detector.",
+    icon: "🔍",
+  },
 ];
 
 export default function HomePage() {
