@@ -75,6 +75,11 @@ struct HoughParams {
     double minEllipseArea        = 100.0;
     float  maxEllipseAspectRatio = 10.0f;
 
+    // Pyramid and Hough controls for ellipse detection
+    int pyramidMinSize = 16;   // smallest pyramid level size (px)
+    int houghMinVote   = 40;   // minimum votes at coarse level
+    int houghMinDist   = 10;   // minimum center distance (px) during voting
+    int maxEllipses    = 5;    // maximum ellipses to detect per run
     // ── Border handling ─────────────────────────────────────────────────────
     int borderMargin = 5;
 };

@@ -43,6 +43,13 @@ const routes = [
       "Detect and visualize SIFT keypoints. Adjust contrast threshold and number of features for the detector.",
     icon: "🔍",
   },
+  {
+    href: "/feature-matching",
+    title: "Feature Matching",
+    description:
+      "Match features between two images using SSD or NCC. Upload two images or reuse the global image as Image 1.",
+    icon: "🔗",
+  },
 ];
 
 export default function HomePage() {
