@@ -631,16 +631,26 @@ void Router::handleFeatureMatching(const httplib::Request& req, httplib::Respons
         processing::FeatureMatchingParams params;
         std::string methodStr = body.value("method", std::string("SSD"));
         if (methodStr == "NCC") params.method = processing::MatchingMethod::NCC;
-        else params.method = processing::MatchingMethod::SSD;
+        else                    params.method = processing::MatchingMethod::SSD;
 
-        processing::FeatureMatchingResult result = processing::FeatureMatcher::match(img1.original, img2.original, params);
+        params.maxMatches        = body.value("maxMatches",        50);
+        params.ratioThreshold    = body.value("ratioThreshold",    0.75f);
+        params.contrastThreshold = body.value("contrastThreshold", 0.01);
+        params.nfeatures         = body.value("nfeatures",         500);
+
+        processing::FeatureMatchingResult result =
+            processing::FeatureMatcher::match(img1.original, img2.original, params);
 
         setCORSHeaders(res);
         json response = {
-            {"success", true},
-            {"image", imageToB64(result.image)},
-            {"matchesCount", result.matchesCount},
-            {"computationTime", result.computationTimeMs}
+            {"success",         true},
+            {"image",           imageToB64(result.image)},
+            {"matchesCount",    result.matchesCount},
+            {"computationTime", result.computationTimeMs},
+            {"siftTimeImg1",    result.siftTimeImg1Ms},
+            {"siftTimeImg2",    result.siftTimeImg2Ms},
+            {"keypointsImg1",   result.keypointsImg1},
+            {"keypointsImg2",   result.keypointsImg2}
         };
         res.set_content(response.dump(), "application/json");
     } catch (const std::exception& e) {

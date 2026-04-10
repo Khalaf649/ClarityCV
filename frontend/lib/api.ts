@@ -107,6 +107,17 @@ export interface SIFTResponse {
   featureCount: number;
 }
 
+export interface FeatureMatchingResponse {
+  success: boolean;
+  image: string;
+  matchesCount: number;
+  computationTime: number;
+  siftTimeImg1: number;
+  siftTimeImg2: number;
+  keypointsImg1: number;
+  keypointsImg2: number;
+}
+
 
 
 // ---------------------------------------------------------------------------
@@ -227,5 +238,19 @@ export const api = {
     image,
     contrastThreshold: params.contrastThreshold,
     nfeatures: params.nfeatures,
+  }),
+
+  featureMatching: (
+    image1: string,
+    image2: string,
+    method: "SSD" | "NCC",
+    maxMatches = 50,
+    ratioThreshold = 0.75,
+  ) => post<FeatureMatchingResponse>("/feature_matching", {
+    image1,
+    image2,
+    method,
+    maxMatches,
+    ratioThreshold,
   }),
 };
