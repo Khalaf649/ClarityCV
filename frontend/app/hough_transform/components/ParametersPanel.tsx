@@ -1,4 +1,3 @@
-import React from "react";
 import { ControlPanel } from "@/components/ControlPanel";
 import { Select } from "@/components/ui/Select";
 import { Slider } from "@/components/ui/Slider";

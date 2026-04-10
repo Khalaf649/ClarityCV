@@ -1,49 +1,47 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Menu, Github } from "lucide-react";
 
-const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/spatial", label: "Spatial Filters" },
-  { href: "/histogram", label: "Histogram" },
-  { href: "/frequency-domain", label: "Frequency Domain" },
-  { href: "/hough_transform", label: "Hough Transform" },
-  { href: "/active_contour", label: "Active Contour" },
-  { href: "/corner-detection", label: "Corner Detection" },
-];
+interface HeaderProps {
+  toggleSidebar: () => void;
+}
 
-export default function Header() {
-  const pathname = usePathname();
-
+export default function Header({ toggleSidebar }: HeaderProps) {
   return (
-    <header className="border-b border-border px-6 py-4 flex items-center justify-between">
-      <h1 className="text-lg font-mono font-bold text-primary tracking-tight">
-        CV<span className="text-foreground">Lab</span>
-      </h1>
+    <header className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 sticky top-0 z-40">
+      <div className="flex items-center gap-4">
+        {/* Hamburger Menu Button */}
+        <button
+          onClick={toggleSidebar}
+          className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+          aria-label="Toggle Sidebar"
+        >
+          <Menu size={24} />
+        </button>
+        
+        {/* Logo */}
+        <Link 
+          href="/" 
+          className="text-2xl font-bold text-white flex items-center no-underline hover:opacity-80 transition-opacity"
+        >
+          <span className="text-cyan-400 font-mono tracking-tight">Clairty</span>
+          <span className="font-mono tracking-tight text-white">Cv</span>
+        </Link>
+      </div>
 
-      <nav className="flex gap-1">
-        {navItems.map((item) => {
-          const isActive =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(item.href);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`px-4 py-2 text-sm font-mono rounded-md transition-colors ${
-                isActive
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Global Actions */}
+      <div className="flex items-center gap-4">
+        <a 
+          href="https://github.com/Khalaf649/ClarityCV" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+          aria-label="GitHub Repository"
+        >
+          <Github size={20} />
+        </a>
+      </div>
     </header>
   );
 }

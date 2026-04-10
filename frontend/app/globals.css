@@ -1,38 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  /* Color Palette — dark lab aesthetic */
-  --color-background: hsl(220 20% 7%);
-  --color-foreground: hsl(200 20% 90%);
+  /* Color Palette — neon lab aesthetic */
+  --color-background: hsl(210 25% 5%);
+  --color-foreground: hsl(200 15% 96%);
 
-  --color-card: hsl(220 18% 10%);
-  --color-card-foreground: hsl(200 20% 90%);
+  --color-card: hsl(210 22% 9.5%);
+  --color-card-foreground: hsl(200 10% 95%);
 
-  --color-popover: hsl(220 18% 10%);
-  --color-popover-foreground: hsl(200 20% 90%);
+  --color-popover: hsl(210 22% 9.5%);
+  --color-popover-foreground: hsl(200 10% 95%);
 
-  --color-primary: hsl(185 70% 50%);
-  --color-primary-foreground: hsl(220 20% 7%);
+  --color-primary: hsl(183 100% 62%);
+  --color-primary-foreground: hsl(210 15% 7%);
 
-  --color-secondary: hsl(220 15% 16%);
-  --color-secondary-foreground: hsl(200 20% 85%);
+  --color-secondary: hsl(282 90% 20%);
+  --color-secondary-foreground: hsl(200 15% 96%);
 
-  --color-muted: hsl(220 15% 14%);
-  --color-muted-foreground: hsl(200 10% 50%);
+  --color-muted: hsl(210 20% 18%);
+  --color-muted-foreground: hsl(200 15% 70%);
 
-  --color-accent: hsl(185 60% 40%);
-  --color-accent-foreground: hsl(200 20% 95%);
+  --color-accent: hsl(183 100% 62%);
+  --color-accent-foreground: hsl(210 15% 7%);
 
-  --color-destructive: hsl(0 70% 55%);
+  --color-destructive: hsl(340 90% 58%);
   --color-destructive-foreground: hsl(0 0% 100%);
 
-  --color-border: hsl(220 15% 18%);
-  --color-input: hsl(220 15% 18%);
-  --color-ring: hsl(185 70% 50%);
+  --color-border: hsl(190 80% 18%);
+  --color-input: hsl(210 20% 16%);
+  --color-ring: hsl(183 100% 62%);
 
-  --color-surface: hsl(220 16% 12%);
-  --color-surface-foreground: hsl(200 20% 85%);
-  --color-glow: hsl(185 70% 50%);
+  --color-surface: hsl(210 22% 10%);
+  --color-surface-foreground: hsl(200 15% 92%);
+  --color-glow: hsl(183 100% 62%);
 
   /* Typography */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;

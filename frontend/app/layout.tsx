@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Suspense } from "react";
-import Header from "@/components/Header";
 import { ImageProvider } from "@/contexts/ImageContext";
+import ClientLayout from "../components/ClientLayout";
 import "./globals.css";
 
 const inter = Inter({
@@ -16,8 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CVLab",
-  description: "Computer Vision Laboratory — Image Processing Toolkit",
+  title: "ClairtyCv",
+  description: "ClairtyCv — Computer Vision Laboratory Toolkit",
 };
 
 export default function RootLayout({
@@ -28,19 +28,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen flex flex-col`}
+        // Added the dark theme background, text colors, and selection color here!
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen flex flex-col bg-[#0f172a] text-slate-300 selection:bg-cyan-500/30`}
       >
-        <Header />
         <ImageProvider>
-          <Suspense
-            fallback={
-              <main className="flex-1 flex items-center justify-center p-6">
-                <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-              </main>
-            }
-          >
-            {children}
-          </Suspense>
+          {/* Wrapping the app in the Client Layout to handle Sidebar state */}
+          <ClientLayout>
+            <Suspense
+              fallback={
+                <main className="flex-1 flex items-center justify-center p-6">
+                  {/* Updated the loading spinner to match the cyan theme */}
+                  <div className="h-10 w-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+                </main>
+              }
+            >
+              {children}
+            </Suspense>
+          </ClientLayout>
         </ImageProvider>
       </body>
     </html>
