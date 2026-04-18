@@ -173,13 +173,13 @@ ContourResult ActiveContour::processGreedy(const cv::Mat& gray, const std::vecto
             for (int dy = -W; dy <= W; ++dy) {
                 for (int dx = -W; dx <= W; ++dx) {
                     cv::Point2d candidate = clamp({ snake[i].x + dx, snake[i].y + dy });
-
+                    // Internal Energy: Continuity
                     double d = cv::norm(candidate - snake[prev]);
                     double cont = (avgDist > 1e-6) ? std::pow(d - avgDist, 2) / (avgDist * avgDist) : 0.0;
-
+                    // Internal Energy: Curvature
                     cv::Point2d curv2d = snake[prev] - 2.0 * candidate + snake[next];
                     double curv = (curv2d.x * curv2d.x + curv2d.y * curv2d.y) / (avgDist * avgDist + 1e-6);
-
+                    // External Energy: Image
                     double eimg = getEimage(static_cast<int>(candidate.x), static_cast<int>(candidate.y));
 
                     cacheCont[cacheIdx] = cont;
