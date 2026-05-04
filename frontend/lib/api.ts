@@ -4,6 +4,54 @@
 
 const PREFIX = "/api";
 
+async function postFormData<T>(
+  endpoint: string,
+  formData: FormData,
+): Promise<T> {
+  const res = await fetch(`${PREFIX}${endpoint}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const contentType = res.headers.get("content-type");
+    if (contentType?.includes("application/json")) {
+      const error = await res.json();
+      throw new Error(error.detail ?? `Backend error: ${res.status}`);
+    } else {
+      const text = await res.text();
+      throw new Error(`Backend error ${res.status}: ${text.substring(0, 200)}`);
+    }
+  }
+
+  const contentType = res.headers.get("content-type");
+  if (!contentType?.includes("application/json")) {
+    const text = await res.text();
+    throw new Error(`Invalid response type: ${contentType}, got: ${text.substring(0, 100)}`);
+  }
+
+  const data = await res.json();
+  return data as T;
+}
+
+// Helper function to convert base64 to File
+function base64ToFile(base64: string, filename: string, mimeType: string = "image/png"): File {
+  // Handle both raw base64 and data URI formats
+  let actualBase64 = base64;
+  if (base64.includes(",")) {
+    // This is a data URI, extract the base64 part
+    actualBase64 = base64.split(",")[1];
+  }
+
+  const bstr = atob(actualBase64);
+  const n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    u8arr[i] = bstr.charCodeAt(i);
+  }
+  return new File([u8arr], filename, { type: mimeType });
+}
+
 async function post<T>(endpoint: string, body: object): Promise<T> {
   const res = await fetch(`${PREFIX}${endpoint}`, {
     method: "POST",
@@ -119,9 +167,13 @@ export interface FeatureMatchingResponse {
 }
 
 export interface SegmentationResponse {
-  success: boolean;
-  result: string;
+  method: string;
+  filename: string;
+  mime_type: string;
+  image_base64: string;
+  metadata: Record<string, unknown>;
 }
+
 export interface FaceRecognitionResponse {
   success: boolean;
   image: string;
@@ -280,17 +332,63 @@ export const api = {
     }),
 
   segmentationThresholding: (
-    image: string,
+    imageBase64: string,
     method: "kmeans" | "region_growing" | "agglomerative" | "mean_shift",
-  ) =>
-    post<SegmentationResponse>("/segmentation/thresholding", { image, method }),
+    params: Record<string, unknown> = {},
+  ) => {
+    const formData = new FormData();
+    const file = base64ToFile(imageBase64, "image.png");
+    formData.append("file", file);
+    formData.append("category", "segmentation");
+    formData.append("method", method);
+
+    // Add optional parameters
+    if (params.k !== undefined) formData.append("k", String(params.k));
+    if (params.seed !== undefined) formData.append("seed", String(params.seed));
+    if (params.include_xy !== undefined)
+      formData.append("include_xy", String(params.include_xy));
+    if (params.seed_x !== undefined) formData.append("seed_x", String(params.seed_x));
+    if (params.seed_y !== undefined) formData.append("seed_y", String(params.seed_y));
+    if (params.threshold !== undefined)
+      formData.append("threshold", String(params.threshold));
+    if (params.connectivity !== undefined)
+      formData.append("connectivity", String(params.connectivity));
+    if (params.clusters !== undefined)
+      formData.append("clusters", String(params.clusters));
+    if (params.sample_size !== undefined)
+      formData.append("sample_size", String(params.sample_size));
+    if (params.bandwidth !== undefined)
+      formData.append("bandwidth", String(params.bandwidth));
+    if (params.merge_radius !== undefined)
+      formData.append("merge_radius", String(params.merge_radius));
+
+    return postFormData<SegmentationResponse>("/segment", formData);
+  },
 
   segmentationAdvanced: (
-    image: string,
+    imageBase64: string,
     method: "optimal" | "otsu" | "spectral" | "local",
-  ) => post<SegmentationResponse>("/segmentation/advanced", { image, method }),
+    params: Record<string, unknown> = {},
+  ) => {
+    const formData = new FormData();
+    const file = base64ToFile(imageBase64, "image.png");
+    formData.append("file", file);
+    formData.append("category", "thresholding");
+    formData.append("method", method);
+
+    // Add optional parameters
+    if (params.epsilon !== undefined) formData.append("epsilon", String(params.epsilon));
+    if (params.max_iter !== undefined) formData.append("max_iter", String(params.max_iter));
+    if (params.levels !== undefined) formData.append("levels", String(params.levels));
+    if (params.window_size !== undefined)
+      formData.append("window_size", String(params.window_size));
+    if (params.offset !== undefined) formData.append("offset", String(params.offset));
+
+    return postFormData<SegmentationResponse>("/segment", formData);
+  },
+
   recognizeFaces: (
     image: string,
-    params: { method: string; threshold: number },
+    params: { method: string, threshold: number },
   ) => post<FaceRecognitionResponse>("/recognize_faces", { image, ...params }),
 };

@@ -19,7 +19,7 @@ export function ActionButtons({
     <div className="flex gap-2">
       <Button
         onClick={onApply}
-        disabled={applyDisabled || loading}
+        disabled={Boolean(applyDisabled || loading)}
         className="flex-1"
         size="sm"
       >

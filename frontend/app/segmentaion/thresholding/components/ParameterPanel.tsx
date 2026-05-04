@@ -9,10 +9,10 @@ interface ThresholdingParameterPanelProps {
 }
 
 const THRESHOLDING_METHODS = [
-  { value: "kmeans", label: "K-Means" },
-  { value: "region_growing", label: "Region Growing" },
-  { value: "agglomerative", label: "Agglomerative" },
-  { value: "mean_shift", label: "Mean Shift" },
+  { value: "optimal", label: "Optimal" },
+  { value: "otsu", label: "Otsu" },
+  { value: "spectral", label: "Spectral" },
+  { value: "local", label: "Local" },
 ];
 
 export function ParameterPanel({

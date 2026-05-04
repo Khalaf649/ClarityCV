@@ -9,7 +9,7 @@ import { api } from "@/lib/api";
 
 export default function ThresholdingPage() {
   const { originalImage, setImageFromFile } = useImageContext();
-  const [selectedMethod, setSelectedMethod] = useState("kmeans");
+  const [selectedMethod, setSelectedMethod] = useState("optimal");
   const [outputImage, setOutputImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,15 +26,15 @@ export default function ThresholdingPage() {
 
     setLoading(true);
     try {
-      const data = await api.segmentationThresholding(
+      const data = await api.segmentationAdvanced(
         originalImage,
         selectedMethod as
-          | "kmeans"
-          | "region_growing"
-          | "agglomerative"
-          | "mean_shift",
+          | "optimal"
+          | "otsu"
+          | "spectral"
+          | "local",
       );
-      setOutputImage(data.result);
+      setOutputImage(`data:image/png;base64,${data.image_base64}`);
     } catch (error) {
       console.error("Error applying thresholding:", error);
       setError("Error applying thresholding. Please try again.");
@@ -45,7 +45,7 @@ export default function ThresholdingPage() {
 
   const handleReset = () => {
     setOutputImage(null);
-    setSelectedMethod("kmeans");
+    setSelectedMethod("optimal");
   };
 
   return (

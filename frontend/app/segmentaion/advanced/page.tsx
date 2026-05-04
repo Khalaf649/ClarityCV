@@ -9,7 +9,7 @@ import { api } from "@/lib/api";
 
 export default function AdvancedPage() {
   const { originalImage, setImageFromFile } = useImageContext();
-  const [selectedMethod, setSelectedMethod] = useState("optimal");
+  const [selectedMethod, setSelectedMethod] = useState("kmeans");
   const [outputImage, setOutputImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,11 +25,15 @@ export default function AdvancedPage() {
 
     setLoading(true);
     try {
-      const data = await api.segmentationAdvanced(
+      const data = await api.segmentationThresholding(
         originalImage,
-        selectedMethod as "optimal" | "otsu" | "spectral" | "local",
+        selectedMethod as
+          | "kmeans"
+          | "region_growing"
+          | "agglomerative"
+          | "mean_shift",
       );
-      setOutputImage(data.result);
+      setOutputImage(`data:image/png;base64,${data.image_base64}`);
     } catch (error) {
       setError(
         `Error applying advanced segmentation: ${error instanceof Error ? error.message : String(error)}`,
@@ -41,7 +45,7 @@ export default function AdvancedPage() {
 
   const handleReset = () => {
     setOutputImage(null);
-    setSelectedMethod("optimal");
+    setSelectedMethod("kmeans");
   };
 
   return (

@@ -9,10 +9,10 @@ interface AdvancedParameterPanelProps {
 }
 
 const ADVANCED_METHODS = [
-  { value: "optimal", label: "Optimal" },
-  { value: "otsu", label: "Otsu" },
-  { value: "spectral", label: "Spectral" },
-  { value: "local", label: "Local" },
+  { value: "kmeans", label: "K-Means" },
+  { value: "region_growing", label: "Region Growing" },
+  { value: "agglomerative", label: "Agglomerative" },
+  { value: "mean_shift", label: "Mean Shift" },
 ];
 
 export function ParameterPanel({
@@ -20,7 +20,7 @@ export function ParameterPanel({
   onMethodChange,
 }: AdvancedParameterPanelProps) {
   return (
-    <ControlPanel title="Advanced Method">
+    <ControlPanel title="Segmentation Method">
       <div className="space-y-3">
         <div>
           <label className="text-xs text-muted-foreground">Select Method</label>
