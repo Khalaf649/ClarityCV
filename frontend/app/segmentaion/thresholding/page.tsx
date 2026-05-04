@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useImageContext } from "@/contexts/ImageContext";
 import { ImageBox } from "@/components/ImageBox";
 import { ParameterTable } from "./components/ParameterTable";
@@ -8,10 +8,17 @@ import { ActionButtons } from "../components/ActionButtons";
 import { api } from "@/lib/api";
 
 export default function ThresholdingPage() {
-  const { originalImage } = useImageContext();
+  const { originalImage, setImageFromFile } = useImageContext();
   const [selectedMethod, setSelectedMethod] = useState("kmeans");
   const [outputImage, setOutputImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const handleUpload = useCallback(
+    async (file: File) => {
+      await setImageFromFile(file);
+    },
+    [setImageFromFile],
+  );
 
   const handleApply = async () => {
     if (!originalImage) return;
@@ -56,11 +63,9 @@ export default function ThresholdingPage() {
           <div className="space-y-3">
             <h2 className="font-semibold text-sm text-foreground">Input</h2>
             <ImageBox
-              src={
-                originalImage ? `data:image/png;base64,${originalImage}` : null
-              }
-              alt="Input image"
-              className="w-full"
+              title="Input"
+              image={originalImage}
+              onUpload={handleUpload}
             />
           </div>
 
@@ -84,11 +89,7 @@ export default function ThresholdingPage() {
           {/* Output Image */}
           <div className="space-y-3">
             <h2 className="font-semibold text-sm text-foreground">Output</h2>
-            <ImageBox
-              src={outputImage ? `data:image/png;base64,${outputImage}` : null}
-              alt="Output image"
-              className="w-full"
-            />
+            <ImageBox title="Output" image={outputImage} />
           </div>
         </div>
       </div>
