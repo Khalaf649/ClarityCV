@@ -122,6 +122,12 @@ export interface SegmentationResponse {
   success: boolean;
   result: string;
 }
+export interface FaceRecognitionResponse {
+  success: boolean;
+  image: string;
+  facesDetected: number;
+  computationTime: number;
+}
 
 // ---------------------------------------------------------------------------
 // API calls
@@ -283,4 +289,8 @@ export const api = {
     image: string,
     method: "optimal" | "otsu" | "spectral" | "local",
   ) => post<SegmentationResponse>("/segmentation/advanced", { image, method }),
+  recognizeFaces: (
+    image: string,
+    params: { method: string; threshold: number },
+  ) => post<FaceRecognitionResponse>("/recognize_faces", { image, ...params }),
 };

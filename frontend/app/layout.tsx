@@ -36,10 +36,10 @@ export default function RootLayout({
           <ClientLayout>
             <Suspense
               fallback={
-                <main className="flex-1 flex items-center justify-center p-6">
+                <div className="flex-1 flex items-center justify-center p-6">
                   {/* Updated the loading spinner to match the cyan theme */}
                   <div className="h-10 w-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-                </main>
+                </div>
               }
             >
               {children}

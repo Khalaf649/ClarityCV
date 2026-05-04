@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { fileToBase64 } from "@/lib/imageProcessing";
+// import Header from "@/components/Header";
 
 interface ImageContextValue {
   /** Raw base64 string of the original image (no data URI prefix) */
@@ -35,6 +36,8 @@ export function ImageProvider({ children }: { children: ReactNode }) {
     <ImageContext.Provider
       value={{ originalImage, setImageFromFile, setOriginalImage, clearImage }}
     >
+      {/* <Header toggleSidebar={() => {}} /> */}
+
       {children}
     </ImageContext.Provider>
   );

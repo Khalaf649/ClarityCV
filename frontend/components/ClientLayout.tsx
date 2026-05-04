@@ -2,9 +2,13 @@
 
 import React, { useState } from "react";
 import Header from "@/components/Header";
- import Sidebar from "./ui/Sidebar"; 
+import Sidebar from "./ui/Sidebar";
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+export default function ClientLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   // This state controls the sidebar across the whole layout
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -13,15 +17,24 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-background text-foreground font-sans">
-      {/* The Header receives the toggle function */}
-      <Header toggleSidebar={toggleSidebar} />
-      
-      <div className="flex flex-1 overflow-hidden relative">
-        <Sidebar isOpen={isSidebarOpen} closeSidebar={closeSidebar} />
-        
-        <main 
-          className={`flex-1 overflow-y-auto transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? 'lg:ml-64' : 'ml-0'
+      {/* Header with toggle function */}
+      <Header toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+
+      {/* Flex container for Sidebar and Main - flex-row layout */}
+      <div className="flex flex-row flex-1 overflow-hidden relative">
+        {/* Sidebar - fixed width when open */}
+        <div
+          className={`transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "w-64" : "w-0"
+          }`}
+        >
+          <Sidebar isOpen={isSidebarOpen} closeSidebar={closeSidebar} />
+        </div>
+
+        {/* Main content - responsive width */}
+        <main
+          className={`overflow-y-auto transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "w-[calc(100vw-16rem)]" : "w-screen"
           }`}
         >
           {children}

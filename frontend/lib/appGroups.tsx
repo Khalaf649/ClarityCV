@@ -6,6 +6,7 @@ import {
   Layers,
   Link as LinkIcon,
   Zap,
+  Users,
 } from "lucide-react";
 
 export const appGroups = [
@@ -84,6 +85,18 @@ export const appGroups = [
         description:
           "Apply advanced segmentation techniques using optimal, Otsu, spectral, and local methods.",
         icon: <Zap size={20} />,
+      },
+    ],
+  },
+  {
+    category: "Face Detection & Recognition",
+    tools: [
+      {
+        href: "/face-recognition",
+        title: "Face Recognition",
+        description:
+          "Detect and recognize faces in images using state-of-the-art face recognition algorithms. Adjust threshold parameters for better accuracy.",
+        icon: <Users size={20} />,
       },
     ],
   },
