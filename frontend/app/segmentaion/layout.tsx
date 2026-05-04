@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 
 const subNavItems = [
-  { href: "/segmentation/advanced", label: "Advanced" },
-  { href: "/segmentation/thresholding", label: "Thresholding" },
+  { href: "/segmentaion/advanced", label: "Advanced" },
+  { href: "/segmentaion/thresholding", label: "Thresholding" },
 ];
 export default function Segmentationlayout({
   children,

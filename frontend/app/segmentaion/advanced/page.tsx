@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useImageContext } from "@/contexts/ImageContext";
 import { ImageBox } from "@/components/ImageBox";
-import { ParameterTable } from "./components/ParameterTable";
+import { ParameterPanel } from "./components/ParameterPanel";
 import { ActionButtons } from "../components/ActionButtons";
 import { api } from "@/lib/api";
 
@@ -11,6 +11,7 @@ export default function AdvancedPage() {
   const { originalImage, setImageFromFile } = useImageContext();
   const [selectedMethod, setSelectedMethod] = useState("optimal");
   const [outputImage, setOutputImage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const handleUpload = useCallback(
     async (file: File) => {
@@ -30,7 +31,9 @@ export default function AdvancedPage() {
       );
       setOutputImage(data.result);
     } catch (error) {
-      console.error("Error applying advanced segmentation:", error);
+      setError(
+        `Error applying advanced segmentation: ${error instanceof Error ? error.message : String(error)}`,
+      );
     } finally {
       setLoading(false);
     }
@@ -42,54 +45,29 @@ export default function AdvancedPage() {
   };
 
   return (
-    <main className="flex-1 p-6 overflow-auto">
-      <div className="space-y-6">
-        {/* Title */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Advanced Segmentation
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Apply advanced segmentation techniques to your image
-          </p>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Input Image */}
-          <div className="space-y-3">
-            <h2 className="font-semibold text-sm text-foreground">Input</h2>
-            <ImageBox
-              title="Input"
-              image={originalImage}
-              onUpload={handleUpload}
-            />
-          </div>
-
-          {/* Control Panel */}
-          <div className="space-y-3">
-            <h2 className="font-semibold text-sm text-foreground">Controls</h2>
-            <div className="space-y-4">
-              <ParameterTable
-                selectedMethod={selectedMethod}
-                onMethodChange={setSelectedMethod}
-              />
-              <ActionButtons
-                onApply={handleApply}
-                onReset={handleReset}
-                applyDisabled={!originalImage}
-                loading={loading}
-              />
-            </div>
-          </div>
-
-          {/* Output Image */}
-          <div className="space-y-3">
-            <h2 className="font-semibold text-sm text-foreground">Output</h2>
-            <ImageBox title="Output" image={outputImage} />
-          </div>
-        </div>
+    <div className="flex  lg:flex-row gap-6 h-full">
+      <div className="flex-1 grid grid-cols-2 gap-4">
+        <ImageBox title="Input" image={originalImage} onUpload={handleUpload} />
+        <ImageBox title="Output" image={outputImage} />
       </div>
-    </main>
+      <div className="w-full lg:w-72 shrink-0 space-y-4">
+        {error && <p className="text-xs text-red-400">{error}</p>}
+        {loading && (
+          <p className="text-xs text-primary animate-pulse">Processing…</p>
+        )}
+
+        <ParameterPanel
+          selectedMethod={selectedMethod}
+          onMethodChange={setSelectedMethod}
+        />
+
+        <ActionButtons
+          onApply={handleApply}
+          onReset={handleReset}
+          applyDisabled={!originalImage}
+          loading={loading}
+        />
+      </div>
+    </div>
   );
 }

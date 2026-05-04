@@ -3,7 +3,7 @@
 import { Select } from "@/components/ui/Select";
 import { ControlPanel } from "@/components/ControlPanel";
 
-interface AdvancedParameterTableProps {
+interface AdvancedParameterPanelProps {
   selectedMethod: string;
   onMethodChange: (method: string) => void;
 }
@@ -15,10 +15,10 @@ const ADVANCED_METHODS = [
   { value: "local", label: "Local" },
 ];
 
-export function ParameterTable({
+export function ParameterPanel({
   selectedMethod,
   onMethodChange,
-}: AdvancedParameterTableProps) {
+}: AdvancedParameterPanelProps) {
   return (
     <ControlPanel title="Advanced Method">
       <div className="space-y-3">

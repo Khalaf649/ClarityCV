@@ -3,7 +3,7 @@
 import { Select } from "@/components/ui/Select";
 import { ControlPanel } from "@/components/ControlPanel";
 
-interface ThresholdingParameterTableProps {
+interface ThresholdingParameterPanelProps {
   selectedMethod: string;
   onMethodChange: (method: string) => void;
 }
@@ -15,10 +15,10 @@ const THRESHOLDING_METHODS = [
   { value: "mean_shift", label: "Mean Shift" },
 ];
 
-export function ParameterTable({
+export function ParameterPanel({
   selectedMethod,
   onMethodChange,
-}: ThresholdingParameterTableProps) {
+}: ThresholdingParameterPanelProps) {
   return (
     <ControlPanel title="Thresholding Method">
       <div className="space-y-3">

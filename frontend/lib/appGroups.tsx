@@ -72,14 +72,14 @@ export const appGroups = [
     category: "Segmentation",
     tools: [
       {
-        href: "/segmentation/thresholding",
+        href: "/segmentaion/thresholding",
         title: "Thresholding",
         description:
           "Apply thresholding-based segmentation methods including k-means, region growing, agglomerative clustering, and mean shift.",
         icon: <Zap size={20} />,
       },
       {
-        href: "/segmentation/advanced",
+        href: "/segmentaion/advanced",
         title: "Advanced Segmentation",
         description:
           "Apply advanced segmentation techniques using optimal, Otsu, spectral, and local methods.",
