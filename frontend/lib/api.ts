@@ -58,8 +58,8 @@ export interface HistogramResponse {
 export interface HistogramCurveResponse {
   success: boolean;
   channels: HistogramChannelWithStats[];
-  plot: string;        // plain histogram
-  plot_curve: string;  // histogram + Gaussian distribution curve
+  plot: string; // plain histogram
+  plot_curve: string; // histogram + Gaussian distribution curve
 }
 
 export interface ThresholdResponse extends ImageResponse {
@@ -118,15 +118,17 @@ export interface FeatureMatchingResponse {
   keypointsImg2: number;
 }
 
-
+export interface SegmentationResponse {
+  success: boolean;
+  result: string;
+}
 
 // ---------------------------------------------------------------------------
 // API calls
 // ---------------------------------------------------------------------------
 
 export const api = {
-  health: () =>
-    fetch(`${PREFIX}/health`).then((r) => r.json()),
+  health: () => fetch(`${PREFIX}/health`).then((r) => r.json()),
 
   load: (image: string, mode: "rgb" | "gray" = "rgb") =>
     post<LoadResponse>("/load", { image, mode }),
@@ -154,7 +156,11 @@ export const api = {
   edge: (
     image: string,
     type: "sobel" | "roberts" | "prewitt" | "canny",
-    params: { canny_low?: number; canny_high?: number; sobel_ksize?: number } = {},
+    params: {
+      canny_low?: number;
+      canny_high?: number;
+      sobel_ksize?: number;
+    } = {},
   ) => post<EdgeResponse>("/edge", { image, type, ...params }),
 
   histogram: (image: string) =>
@@ -163,11 +169,9 @@ export const api = {
   histogramCurve: (image: string) =>
     post<HistogramCurveResponse>("/histogram_curve", { image }),
 
-  equalize: (image: string) =>
-    post<ImageResponse>("/equalize", { image }),
+  equalize: (image: string) => post<ImageResponse>("/equalize", { image }),
 
-  normalize: (image: string) =>
-    post<ImageResponse>("/normalize", { image }),
+  normalize: (image: string) => post<ImageResponse>("/normalize", { image }),
 
   threshold: (
     image: string,
@@ -199,8 +203,13 @@ export const api = {
   houghTransform: (
     image: string,
     shape_type: "line" | "circle" | "ellipse",
-    votes_threshold: number
-  ) => post<ImageResponse>("/hough_transform", { image, shape_type, votes_threshold }),
+    votes_threshold: number,
+  ) =>
+    post<ImageResponse>("/hough_transform", {
+      image,
+      shape_type,
+      votes_threshold,
+    }),
 
   activeContour: (
     image: string,
@@ -225,20 +234,29 @@ export const api = {
     sigma: number,
     windowSize: number,
     threshold: number,
-    k: number
-  ) => post<CornerDetectionResponse>("/corner_detection", { image, mode, sigma, windowSize, threshold, k }),
+    k: number,
+  ) =>
+    post<CornerDetectionResponse>("/corner_detection", {
+      image,
+      mode,
+      sigma,
+      windowSize,
+      threshold,
+      k,
+    }),
 
   sift: (
     image: string,
-    params: { 
-      contrastThreshold: number; 
+    params: {
+      contrastThreshold: number;
       nfeatures: number;
     },
-  ) => post<SIFTResponse>("/sift", {
-    image,
-    contrastThreshold: params.contrastThreshold,
-    nfeatures: params.nfeatures,
-  }),
+  ) =>
+    post<SIFTResponse>("/sift", {
+      image,
+      contrastThreshold: params.contrastThreshold,
+      nfeatures: params.nfeatures,
+    }),
 
   featureMatching: (
     image1: string,
@@ -246,11 +264,23 @@ export const api = {
     method: "SSD" | "NCC",
     maxMatches = 50,
     ratioThreshold = 0.75,
-  ) => post<FeatureMatchingResponse>("/feature_matching", {
-    image1,
-    image2,
-    method,
-    maxMatches,
-    ratioThreshold,
-  }),
+  ) =>
+    post<FeatureMatchingResponse>("/feature_matching", {
+      image1,
+      image2,
+      method,
+      maxMatches,
+      ratioThreshold,
+    }),
+
+  segmentationThresholding: (
+    image: string,
+    method: "kmeans" | "region_growing" | "agglomerative" | "mean_shift",
+  ) =>
+    post<SegmentationResponse>("/segmentation/thresholding", { image, method }),
+
+  segmentationAdvanced: (
+    image: string,
+    method: "optimal" | "otsu" | "spectral" | "local",
+  ) => post<SegmentationResponse>("/segmentation/advanced", { image, method }),
 };

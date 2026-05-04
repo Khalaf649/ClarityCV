@@ -1,4 +1,12 @@
-import { Activity, BarChart2, Crosshair, Image as ImageIcon, Layers, Link as LinkIcon } from "lucide-react";
+import {
+  Activity,
+  BarChart2,
+  Crosshair,
+  Image as ImageIcon,
+  Layers,
+  Link as LinkIcon,
+  Zap,
+} from "lucide-react";
 
 export const appGroups = [
   {
@@ -57,6 +65,25 @@ export const appGroups = [
         description:
           "Match features between two images using SSD or NCC. Upload two images or reuse the global image as Image 1.",
         icon: <LinkIcon size={20} />,
+      },
+    ],
+  },
+  {
+    category: "Segmentation",
+    tools: [
+      {
+        href: "/segmentation/thresholding",
+        title: "Thresholding",
+        description:
+          "Apply thresholding-based segmentation methods including k-means, region growing, agglomerative clustering, and mean shift.",
+        icon: <Zap size={20} />,
+      },
+      {
+        href: "/segmentation/advanced",
+        title: "Advanced Segmentation",
+        description:
+          "Apply advanced segmentation techniques using optimal, Otsu, spectral, and local methods.",
+        icon: <Zap size={20} />,
       },
     ],
   },
