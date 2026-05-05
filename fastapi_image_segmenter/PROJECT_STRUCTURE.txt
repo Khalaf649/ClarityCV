@@ -1,0 +1,23 @@
+fastapi_image_segmenter/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── image_service.py
+│   └── schemas.py
+├── algorithms/
+│   ├── __init__.py
+│   ├── thresholding.py
+│   └── segmentation.py
+├── utils/
+│   ├── __init__.py
+│   ├── image_io.py
+│   └── palette.py
+├── frontend_examples/
+│   ├── api.js
+│   └── ImageSegmenter.jsx
+├── samples/
+├── results/
+├── run_cli.py
+├── demo_generate_outputs.py
+├── requirements.txt
+└── README.md
