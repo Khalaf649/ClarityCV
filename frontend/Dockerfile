@@ -11,8 +11,15 @@ ENV BACKEND_URL=$BACKEND_URL
 ARG FACE_RECOGNITION_URL=http://face_recognition:8081
 ENV FACE_RECOGNITION_URL=$FACE_RECOGNITION_URL
 
-COPY package.json package-lock.json ./
-RUN npm ci
+# Copy lockfile if it exists (matches package.json + optionally package-lock.json).
+# Use `npm ci` for reproducible installs when the lock is present, fall back to
+# `npm install` otherwise — needed because the team repo doesn't ship a lock.
+COPY package*.json ./
+RUN if [ -f package-lock.json ]; then \
+        npm ci --no-audit --prefer-offline; \
+    else \
+        npm install --no-audit --prefer-offline; \
+    fi
 
 COPY . .
 RUN npm run build

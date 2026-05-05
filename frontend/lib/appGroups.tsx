@@ -5,7 +5,6 @@ import {
   Image as ImageIcon,
   Layers,
   Link as LinkIcon,
-  Zap,
   Users,
 } from "lucide-react";
 
@@ -66,25 +65,6 @@ export const appGroups = [
         description:
           "Match features between two images using SSD or NCC. Upload two images or reuse the global image as Image 1.",
         icon: <LinkIcon size={20} />,
-      },
-    ],
-  },
-  {
-    category: "Segmentation",
-    tools: [
-      {
-        href: "/segmentaion/thresholding",
-        title: "Thresholding",
-        description:
-          "Apply thresholding-based segmentation methods including k-means, region growing, agglomerative clustering, and mean shift.",
-        icon: <Zap size={20} />,
-      },
-      {
-        href: "/segmentaion/advanced",
-        title: "Advanced Segmentation",
-        description:
-          "Apply advanced segmentation techniques using optimal, Otsu, spectral, and local methods.",
-        icon: <Zap size={20} />,
       },
     ],
   },
