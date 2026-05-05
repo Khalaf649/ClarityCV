@@ -8,8 +8,8 @@ WORKDIR /app
 # Build arg — injected from docker-compose at build time
 ARG BACKEND_URL=http://backend:8080
 ENV BACKEND_URL=$BACKEND_URL
-ARG FACE_RECOGNITION_URL=http://face_recognition:8081
-ENV FACE_RECOGNITION_URL=$FACE_RECOGNITION_URL
+ARG PYTHON_SERVICE_URL=http://python_service:8081
+ENV PYTHON_SERVICE_URL=$PYTHON_SERVICE_URL
 
 # Copy lockfile if it exists (matches package.json + optionally package-lock.json).
 # Use `npm ci` for reproducible installs when the lock is present, fall back to
@@ -37,8 +37,8 @@ ENV PORT=3000
 # Pass the URL to runtime as well
 ARG BACKEND_URL=http://backend:8080
 ENV BACKEND_URL=$BACKEND_URL
-ARG FACE_RECOGNITION_URL=http://face_recognition:8081
-ENV FACE_RECOGNITION_URL=$FACE_RECOGNITION_URL
+ARG PYTHON_SERVICE_URL=http://python_service:8081
+ENV PYTHON_SERVICE_URL=$PYTHON_SERVICE_URL
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next

@@ -20,7 +20,7 @@ and provides:
 ## Layout
 
 ```
-face_recognition_service/
+python_service/
 ├── core/                    Pure algorithms — no HTTP, no CLI
 │   ├── __init__.py
 │   ├── recognizer.py        Eigenfaces classifier + tolerant .pkl loader
@@ -45,7 +45,7 @@ face_recognition_service/
 ## Setup
 
 ```bash
-cd face_recognition_service
+cd python_service
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -187,14 +187,14 @@ This brings up three containers on a shared network:
 | service            | container             | host port |
 | ------------------ | --------------------- | --------- |
 | backend (C++)      | `cv_backend`          | 8080      |
-| face_recognition   | `cv_face_recognition` | 8081      |
+| python_service     | `cv_python_service`   | 8081      |
 | frontend (Next.js) | `cv_frontend`         | 3000      |
 
 The `.pkl` is baked into the image at build time. To swap models, drop in
 the new file and rebuild just this service:
 
 ```bash
-docker compose build face_recognition && docker compose up -d face_recognition
+docker compose build python_service && docker compose up -d python_service
 ```
 
 If you'd rather hot-swap without rebuilding, uncomment the `volumes:` block
@@ -203,4 +203,4 @@ you run `docker compose up`, or Docker creates an empty directory in its
 place.
 
 Inside the compose network the frontend reaches the service at
-`http://face_recognition:8081`; from your host it's `http://localhost:8081`.
+`http://python_service:8081`; from your host it's `http://localhost:8081`.

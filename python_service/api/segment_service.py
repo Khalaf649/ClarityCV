@@ -1,3 +1,9 @@
+"""Segmentation / thresholding service helpers.
+
+Adapted from the original ``fastapi_image_segmenter/app/image_service.py``;
+only the imports change (``algorithms.*`` and ``utils.*`` now resolve
+relative to the merged service root). Logic is unchanged.
+"""
 from __future__ import annotations
 
 import base64
@@ -27,18 +33,18 @@ ALLOWED_SEGMENTATION_METHODS = {"kmeans", "region_growing", "agglomerative", "me
 
 
 def read_upload_to_array(file_bytes: bytes, mode: str = "RGB") -> np.ndarray:
-    """Read an uploaded image into a NumPy array using Pillow, not OpenCV."""
+    """Decode an uploaded image into a NumPy array using Pillow (no OpenCV)."""
     buffer = BytesIO(file_bytes)
-    buffer.seek(0)  # Ensure we're at the beginning
+    buffer.seek(0)
     image = Image.open(buffer)
-    image.load()  # Force load the image data while buffer is still open
+    image.load()  # Force-load while the buffer is still open.
     if mode:
         image = image.convert(mode)
     return np.asarray(image)
 
 
 def array_to_png_base64(array: np.ndarray) -> str:
-    """Encode a NumPy image array as PNG base64 for JSON API responses."""
+    """Encode a NumPy image array as a base64-PNG string for JSON responses."""
     arr = np.asarray(array)
     if arr.dtype != np.uint8:
         arr = np.clip(arr, 0, 255).astype(np.uint8)

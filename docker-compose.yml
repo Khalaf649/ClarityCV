@@ -22,11 +22,11 @@ services:
     networks:
       - cv_network
 
-  face_recognition:
+  python_service:
     build:
-      context: ./face_recognition_service
+      context: ./python_service
       dockerfile: Dockerfile
-    container_name: cv_face_recognition
+    container_name: cv_python_service
     restart: unless-stopped
     environment:
       PORT: "8081"
@@ -34,11 +34,11 @@ services:
     ports:
       - "8081:8081"
     # The .pkl is COPY'd into the image at build time. To swap the model:
-    #   docker compose build face_recognition && docker compose up -d face_recognition
+    #   docker compose build python_service && docker compose up -d python_service
     # Or uncomment the volume below for hot-swap (the file must exist on host
     # BEFORE you run `docker compose up` or Docker will create an empty dir):
     # volumes:
-    #   - ./face_recognition_service/trained_model.pkl:/app/trained_model.pkl:ro
+    #   - ./python_service/trained_model.pkl:/app/trained_model.pkl:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/api/health"]
       interval: 30s
@@ -55,7 +55,10 @@ services:
       target: runtime
       args:
         BACKEND_URL: "http://backend:8080"
-        FACE_RECOGNITION_URL: "http://face_recognition:8081"
+        # Inside the compose network, services are reachable via their service
+        # name as the hostname — that's why this is `python_service`, not
+        # `localhost` or the container_name.
+        PYTHON_SERVICE_URL: "http://python_service:8081"
     container_name: cv_frontend
     restart: unless-stopped
     ports:
@@ -63,7 +66,7 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      face_recognition:
+      python_service:
         condition: service_healthy
     networks:
       - cv_network
