@@ -8,6 +8,8 @@ WORKDIR /app
 # Build arg — injected from docker-compose at build time
 ARG BACKEND_URL=http://backend:8080
 ENV BACKEND_URL=$BACKEND_URL
+ARG FACE_RECOGNITION_URL=http://face_recognition:8081
+ENV FACE_RECOGNITION_URL=$FACE_RECOGNITION_URL
 
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -28,6 +30,8 @@ ENV PORT=3000
 # Pass the URL to runtime as well
 ARG BACKEND_URL=http://backend:8080
 ENV BACKEND_URL=$BACKEND_URL
+ARG FACE_RECOGNITION_URL=http://face_recognition:8081
+ENV FACE_RECOGNITION_URL=$FACE_RECOGNITION_URL
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
