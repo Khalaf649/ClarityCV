@@ -16,6 +16,39 @@ async function post<T>(endpoint: string, body: object): Promise<T> {
   return data as T;
 }
 
+// Multipart upload — used by /api/segment which expects file + form fields.
+// The segment response from FastAPI doesn't have a "success" boolean, so we
+// rely on the HTTP status code instead of treating !data.success as failure.
+async function postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+  const res = await fetch(`${PREFIX}${endpoint}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const ct = res.headers.get("content-type") ?? "";
+    if (ct.includes("application/json")) {
+      const err = await res.json();
+      throw new Error(err.detail ?? `Backend error ${res.status}`);
+    }
+    const text = await res.text();
+    throw new Error(`Backend error ${res.status}: ${text.slice(0, 200)}`);
+  }
+
+  return (await res.json()) as T;
+}
+
+// Convert a base64-encoded image (with or without `data:` prefix) into a File
+// object so we can attach it to a multipart/form-data POST.
+function base64ToFile(base64: string, filename: string, mimeType: string = "image/png"): File {
+  let raw = base64;
+  if (raw.includes(",")) raw = raw.split(",", 2)[1];
+  const bin = atob(raw);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new File([bytes], filename, { type: mimeType });
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -123,6 +156,31 @@ export interface FaceRecognitionResponse {
   image: string;
   facesDetected: number;
   computationTime: number;
+}
+
+// Segmentation API (POST /api/segment, GET /api/methods).
+// Note: this endpoint comes from the merged Python service — its response
+// shape doesn't include a `success` boolean. Existence of `image_base64`
+// implies success; HTTP status drives error handling.
+export interface SegmentationResponse {
+  method: string;
+  filename: string;
+  mime_type: string;
+  image_base64: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface SegmentationMethod {
+  name: string;
+  category: string;
+  accepts: string;
+  description: string;
+  params: Record<string, unknown>;
+}
+
+export interface SegmentationMethodsResponse {
+  thresholding: SegmentationMethod[];
+  segmentation: SegmentationMethod[];
 }
 
 // ---------------------------------------------------------------------------
@@ -279,4 +337,46 @@ export const api = {
     image: string,
     params: { method: string, threshold: number },
   ) => post<FaceRecognitionResponse>("/recognize_faces", { image, ...params }),
+
+  // ─── Segmentation / thresholding (merged Python service) ──────────────────
+
+  // List every available method and its parameters. Used by the segmentation
+  // pages on first render to know what's possible.
+  listSegmentationMethods: async (): Promise<SegmentationMethodsResponse> => {
+    const res = await fetch(`${PREFIX}/methods`);
+    if (!res.ok) throw new Error(`Backend error ${res.status}`);
+    return (await res.json()) as SegmentationMethodsResponse;
+  },
+
+  // Run a thresholding method (otsu, optimal, spectral, local).
+  segmentationThresholding: (
+    imageBase64: string,
+    method: "optimal" | "otsu" | "spectral" | "local",
+    params: Record<string, unknown> = {},
+  ) => {
+    const formData = new FormData();
+    formData.append("file", base64ToFile(imageBase64, "image.png"));
+    formData.append("category", "thresholding");
+    formData.append("method", method);
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== null) formData.append(k, String(v));
+    }
+    return postFormData<SegmentationResponse>("/segment", formData);
+  },
+
+  // Run a segmentation method (kmeans, region_growing, agglomerative, mean_shift).
+  segmentation: (
+    imageBase64: string,
+    method: "kmeans" | "region_growing" | "agglomerative" | "mean_shift",
+    params: Record<string, unknown> = {},
+  ) => {
+    const formData = new FormData();
+    formData.append("file", base64ToFile(imageBase64, "image.png"));
+    formData.append("category", "segmentation");
+    formData.append("method", method);
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== null) formData.append(k, String(v));
+    }
+    return postFormData<SegmentationResponse>("/segment", formData);
+  },
 };

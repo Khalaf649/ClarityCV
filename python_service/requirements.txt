@@ -1,0 +1,10 @@
+numpy>=1.24
+opencv-python>=4.8
+Pillow>=10.0
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.5
+matplotlib>=3.7
+# python-multipart is required by FastAPI for multipart/form-data uploads
+# (used by the /api/segment endpoint to accept image files).
+python-multipart>=0.0.20
